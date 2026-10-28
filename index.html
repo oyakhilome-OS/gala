@@ -822,25 +822,46 @@
 
         // Scanner Logic
         function startScanner() {
-            document.getElementById('scannerPlaceholder').classList.add('hidden');
-            document.getElementById('stopScanBtn').classList.remove('hidden');
-            if (!html5QrCodeScanner) html5QrCodeScanner = new Html5Qrcode("reader");
-            html5QrCodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 220, height: 220 } }, onScanSuccess, () => {}).catch(err => {
-                alert("Camera permission denied or not found.");
-                stopScanner();
-            });
-        }
+    document.getElementById('scannerPlaceholder').classList.add('hidden');
+    document.getElementById('stopScanBtn').classList.remove('hidden');
 
-        function stopScanner() {
-            if (html5QrCodeScanner && html5QrCodeScanner.isScanning) {
-                html5QrCodeScanner.stop().then(() => {
-                    document.getElementById('scannerPlaceholder').classList.remove('hidden');
-                    document.getElementById('stopScanBtn').classList.add('hidden');
-                }).catch(err => {});
-            } else {
-                document.getElementById('scannerPlaceholder').classList.remove('hidden');
-                document.getElementById('stopScanBtn').classList.add('hidden');
+    // Ensure any previous instance is completely cleared out first
+    if (html5QrCodeScanner) {
+        try {
+            html5QrCodeScanner.clear().catch(e => {});
+        } catch(e) {}
+    }
+
+    html5QrCodeScanner = new Html5Qrcode("reader");
+    
+    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+    html5QrCodeScanner.start(
+        { facingMode: "environment" }, 
+        config, 
+        onScanSuccess, 
+        (err) => {}
+    ).catch(err => {
+        console.error("Camera start error:", err);
+        alert("Camera permission denied, or camera is already in use by another app/tab.");
+        stopScanner();
+    });
+}
+
+        async function stopScanner() {
+    if (html5QrCodeScanner) {
+        try {
+            if (html5QrCodeScanner.isScanning) {
+                await html5QrCodeScanner.stop();
             }
+            await html5QrCodeScanner.clear();
+        } catch (err) {
+            console.log("Stop scanner cleanup note:", err);
+        }
+    }
+    document.getElementById('scannerPlaceholder').classList.remove('hidden');
+    document.getElementById('stopScanBtn').classList.add('hidden');
+}
         }
 
         function onScanSuccess(decodedText) { processScannedPayload(decodedText); }
