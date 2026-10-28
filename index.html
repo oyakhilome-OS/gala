@@ -64,33 +64,54 @@
         #reader video {
             object-fit: cover !important;
             border-radius: 0.75rem !important;
-        }
-        #reader__dashboard_section_csr button, 
-        #reader__dashboard_section_swaplink {
-            background-color: #1f2937 !important;
-            color: #facc15 !important;
-            border: 1px solid #374151 !important;
-            padding: 10px 16px !important;
-            border-radius: 8px !important;
-            font-size: 13px !important;
-            font-weight: 600 !important;
-            margin-top: 8px !important;
             width: 100% !important;
-            touch-action: manipulation;
-        }
-        #reader select {
-            background-color: #0f172a !important;
-            color: #ffffff !important;
-            border: 1px solid #334155 !important;
-            padding: 8px 12px !important;
-            border-radius: 8px !important;
-            font-size: 13px !important;
-            width: 100% !important;
-            margin-bottom: 8px !important;
+            height: 100% !important;
         }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0c0e14; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+
+        /* Scanner Viewfinder Reticle Box Overlay */
+        .scanner-reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px solid rgba(250, 204, 21, 0.4);
+            border-radius: 16px;
+            pointer-events: none;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+            z-index: 10;
+        }
+        .reticle-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: #facc15;
+            border-style: solid;
+        }
+        .reticle-tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-top-left-radius: 14px; }
+        .reticle-tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; border-top-right-radius: 14px; }
+        .reticle-bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; border-bottom-left-radius: 14px; }
+        .reticle-br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-bottom-right-radius: 14px; }
+
+        @keyframes scanLaser {
+            0% { top: 10%; opacity: 0.2; }
+            50% { opacity: 0.9; }
+            100% { top: 90%; opacity: 0.2; }
+        }
+        .scan-laser {
+            position: absolute;
+            left: 5%;
+            right: 5%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #facc15, transparent);
+            box-shadow: 0 0 8px #facc15;
+            animation: scanLaser 2s infinite ease-in-out;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-darkgala text-gray-200 min-h-screen font-sans antialiased flex flex-col selection:bg-amber-500 selection:text-black overflow-x-hidden">
@@ -221,9 +242,9 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Ticket ID</label>
-                            <input type="text" id="buyerTicketId" required readonly
-                                class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-3 text-sm font-mono text-amber-400 font-bold focus:outline-none">
+                            <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Ticket ID *</label>
+                            <input type="text" id="buyerTicketId" required
+                                class="w-full bg-gray-900 border border-gray-700 focus:border-amber-500 rounded-xl px-3.5 py-3 text-sm font-mono text-amber-400 font-bold focus:outline-none transition uppercase">
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Tier</label>
@@ -311,19 +332,38 @@
             <div class="lg:col-span-7 bg-cardgala border border-bordergala rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col items-center">
                 <div class="w-full flex items-center justify-between mb-3">
                     <h2 class="text-base font-bold font-cinzel text-white flex items-center gap-2">
-                        <i class="fa-solid fa-camera text-amber-500 text-sm"></i> QR Code Scanner
+                        <i class="fa-solid fa-camera text-amber-500 text-sm"></i> Back Camera Scanner
                     </h2>
-                    <span class="text-[11px] text-gray-400">Live Camera</span>
+                    <span id="scannerStatusText" class="text-[11px] text-amber-400 font-medium flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Camera Active
+                    </span>
                 </div>
 
-                <!-- Scanner Outer Frame -->
-                <div class="w-full max-w-sm bg-gray-950 rounded-2xl overflow-hidden border-2 border-amber-500/30 p-2 relative shadow-inner">
-                    <div id="reader" class="w-full min-h-[260px] flex items-center justify-center"></div>
+                <!-- Scanner Outer Frame with Targeting Reticle Overlay -->
+                <div class="w-full max-w-sm bg-gray-950 rounded-2xl overflow-hidden border-2 border-amber-500/40 relative shadow-2xl aspect-square flex items-center justify-center">
+                    <div id="reader" class="w-full h-full"></div>
+                    
+                    <!-- Reticle Frame -->
+                    <div id="reticleBox" class="scanner-reticle hidden">
+                        <div class="reticle-corner reticle-tl"></div>
+                        <div class="reticle-corner reticle-tr"></div>
+                        <div class="reticle-corner reticle-bl"></div>
+                        <div class="reticle-corner reticle-br"></div>
+                        <div class="scan-laser"></div>
+                    </div>
+
+                    <!-- Instant Mobile Result Alert Banner Overlay -->
+                    <div id="instantScanAlert" class="absolute inset-x-2 top-2 z-20 hidden p-3.5 rounded-xl backdrop-blur-md shadow-2xl border transition-all duration-300 animate-in fade-in slide-in-from-top-4">
+                        <!-- Dynamic overlay content injected here -->
+                    </div>
                 </div>
 
-                <div class="w-full max-w-sm mt-3 flex items-center justify-end">
-                    <label class="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-300 rounded-xl text-xs font-semibold border border-gray-700 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95">
-                        <i class="fa-solid fa-file-image text-amber-400"></i> Upload QR Code Image
+                <div class="w-full max-w-sm mt-3 flex items-center justify-between gap-2">
+                    <button onclick="toggleBackCamera()" id="toggleCamBtn" class="py-2.5 px-3 bg-gray-900 hover:bg-gray-800 text-amber-400 rounded-xl text-xs font-semibold border border-gray-800 transition active:scale-95 flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> Restart Camera
+                    </button>
+                    <label class="py-2.5 px-3 bg-gray-900 hover:bg-gray-800 text-gray-300 rounded-xl text-xs font-semibold border border-gray-800 transition cursor-pointer flex items-center gap-1.5 active:scale-95">
+                        <i class="fa-solid fa-file-image text-amber-400"></i> Upload Image
                         <input type="file" id="qrFileInput" accept="image/*" class="hidden" onchange="scanQRImage(event)">
                     </label>
                 </div>
@@ -544,8 +584,9 @@
             counter: 1
         };
 
-        let html5QrCodeScanner = null;
+        let html5QrCode = null;
         let qrCodeInstance = null;
+        let isProcessingScan = false;
 
         window.onload = function() {
             loadSettings();
@@ -561,7 +602,6 @@
             loadTicketsFromCloud();
             updateNextTicketIdInput();
             renderHeaderAndPreviewDefaults();
-            initScannerWidget();
         };
 
         function renderAdminUI() {
@@ -847,17 +887,192 @@
                     btnEl.classList.add('text-gray-400');
                 }
             });
+
+            if (tabName === 'scanner') {
+                startBackCamera();
+            } else {
+                stopBackCamera();
+            }
         }
 
-        // Scanner Widget Initialization
-        function initScannerWidget() {
-            if (!html5QrCodeScanner) {
-                html5QrCodeScanner = new Html5QrcodeScanner(
-                    "reader", 
-                    { fps: 10, qrbox: { width: 200, height: 200 } },
-                    /* verbose= */ false
+        // Direct Rear / Back Camera Auto Start
+        async function startBackCamera() {
+            if (html5QrCode && html5QrCode.isScanning) return;
+
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+
+            const config = { fps: 15, qrbox: { width: 220, height: 220 } };
+
+            try {
+                // Force environment camera (rear camera) directly without camera choice UI
+                await html5QrCode.start(
+                    { facingMode: { exact: "environment" } },
+                    config,
+                    onScanSuccess,
+                    () => {}
                 );
-                html5QrCodeScanner.render(onScanSuccess, (err) => {});
+                document.getElementById('reticleBox').classList.remove('hidden');
+            } catch (err) {
+                // Fallback to standard environment facingMode if exact constraint fails
+                try {
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        config,
+                        onScanSuccess,
+                        () => {}
+                    );
+                    document.getElementById('reticleBox').classList.remove('hidden');
+                } catch (e) {
+                    console.error("Camera start failed:", e);
+                    document.getElementById('scannerStatusText').innerText = "Camera Offline";
+                }
+            }
+        }
+
+        async function stopBackCamera() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                try {
+                    await html5QrCode.stop();
+                    document.getElementById('reticleBox').classList.add('hidden');
+                } catch (e) {}
+            }
+        }
+
+        function toggleBackCamera() {
+            stopBackCamera().then(() => startBackCamera());
+        }
+
+        function onScanSuccess(decodedText) { 
+            if (isProcessingScan) return;
+            isProcessingScan = true;
+            processScannedPayload(decodedText); 
+            setTimeout(() => { isProcessingScan = false; }, 2000);
+        }
+
+        function scanQRImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.scanFile(file, true)
+                .then(decodedText => processScannedPayload(decodedText))
+                .catch(err => alert("No valid QR Code found in image."));
+        }
+
+        function handleManualLookup(e) {
+            e.preventDefault();
+            const ticketId = document.getElementById('manualTicketInput').value.trim().toUpperCase();
+            if (ticketId) {
+                processScannedPayload(ticketId);
+                document.getElementById('manualTicketInput').value = '';
+            }
+        }
+
+        async function processScannedPayload(rawText) {
+            let scannedId = rawText;
+            try {
+                const parsed = JSON.parse(rawText);
+                if (parsed && parsed.id) scannedId = parsed.id;
+            } catch(e) {}
+
+            scannedId = String(scannedId).trim().toUpperCase();
+            const ticketIndex = tickets.findIndex(t => t.ticketId === scannedId);
+
+            hideScanResultCards();
+
+            if (ticketIndex === -1) {
+                document.getElementById('scanResultError').classList.remove('hidden');
+                showInstantAlert('error', 'INVALID TICKET', `No ticket matching ${scannedId}`);
+                triggerHapticFeedback([100, 50, 100]);
+            } else {
+                const ticket = tickets[ticketIndex];
+                if (ticket.status === 'CHECKED_IN') {
+                    document.getElementById('warnName').innerText = ticket.name;
+                    document.getElementById('warnTicketId').innerText = ticket.ticketId;
+                    document.getElementById('warnCheckedBy').innerText = ticket.checkedInBy || 'Unknown';
+                    document.getElementById('warnTime').innerText = ticket.checkInTime ? new Date(ticket.checkInTime).toLocaleTimeString() : 'Earlier';
+                    document.getElementById('scanResultWarning').classList.remove('hidden');
+                    
+                    showInstantAlert('warning', 'ALREADY SCANNED', `${ticket.name} (${ticket.ticketId})`);
+                    triggerHapticFeedback([150, 80, 150]);
+                } else {
+                    const checkInTimestamp = new Date().toISOString();
+                    const scannerVendor = currentVendor || 'Admin';
+                    
+                    // Update Cloud Database Status & Checked-in-by tag
+                    await supabaseClient
+                        .from('tickets')
+                        .update({ 
+                            status: 'CHECKED_IN', 
+                            check_in_time: checkInTimestamp,
+                            checked_in_by: scannerVendor 
+                        })
+                        .eq('ticket_id', ticket.ticketId);
+
+                    ticket.status = 'CHECKED_IN';
+                    ticket.checkInTime = checkInTimestamp;
+                    ticket.checkedInBy = scannerVendor;
+                    tickets[ticketIndex] = ticket;
+                    
+                    updateStats();
+                    renderAttendeesTable();
+
+                    document.getElementById('resName').innerText = ticket.name;
+                    document.getElementById('resTicketId').innerText = ticket.ticketId;
+                    document.getElementById('resPhone').innerText = ticket.phone;
+                    document.getElementById('resTier').innerText = ticket.tier;
+                    document.getElementById('resCheckedBy').innerText = scannerVendor;
+                    document.getElementById('resTime').innerText = new Date(ticket.checkInTime).toLocaleTimeString();
+                    document.getElementById('scanResultSuccess').classList.remove('hidden');
+
+                    showInstantAlert('success', 'ENTRY APPROVED', `${ticket.name} • ${ticket.ticketId}`);
+                    triggerHapticFeedback(80);
+                }
+            }
+        }
+
+        // Instant Banner Overlay directly on camera frame so user doesn't need to scroll down
+        function showInstantAlert(type, title, subtitle) {
+            const alertEl = document.getElementById('instantScanAlert');
+            alertEl.classList.remove('hidden', 'bg-emerald-950/90', 'border-emerald-500', 'text-emerald-300', 'bg-red-950/90', 'border-red-500', 'text-red-300');
+
+            if (type === 'success') {
+                alertEl.classList.add('bg-emerald-950/95', 'border-emerald-500', 'text-emerald-300');
+                alertEl.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg flex-shrink-0">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="text-sm font-bold text-white tracking-wide">${title}</h4>
+                            <p class="text-xs truncate font-medium">${subtitle}</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                alertEl.classList.add('bg-red-950/95', 'border-red-500', 'text-red-300');
+                alertEl.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-lg flex-shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="text-sm font-bold text-white tracking-wide">${title}</h4>
+                            <p class="text-xs truncate font-medium">${subtitle}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            setTimeout(() => {
+                alertEl.classList.add('hidden');
+            }, 3500);
+        }
+
+        function triggerHapticFeedback(pattern) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
             }
         }
 
