@@ -876,37 +876,53 @@
         }
 
         async function startBackCamera() {
-            if (html5QrCode && html5QrCode.isScanning) return;
+    if (html5QrCode && html5QrCode.isScanning) return;
 
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
+    if (!html5QrCode) {
+        html5QrCode = new Html5Qrcode("reader");
+    }
 
-            const config = { fps: 15, qrbox: { width: 220, height: 220 } };
-
-            try {
-                await html5QrCode.start(
-                    { facingMode: { exact: "environment" } },
-                    config,
-                    onScanSuccess,
-                    () => {}
-                );
-                document.getElementById('reticleBox').classList.remove('hidden');
-            } catch (err) {
-                try {
-                    await html5QrCode.start(
-                        { facingMode: "environment" },
-                        config,
-                        onScanSuccess,
-                        () => {}
-                    );
-                    document.getElementById('reticleBox').classList.remove('hidden');
-                } catch (e) {
-                    console.error("Camera start failed:", e);
-                    document.getElementById('scannerStatusText').innerText = "Camera Offline";
-                }
-            }
+    // High performance config for fast mobile scanning
+    const config = { 
+        fps: 30, // Increased frame rate for faster detection
+        qrbox: { width: 220, height: 220 },
+        aspectRatio: 1.0,
+        experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true // Uses native hardware acceleration if available on mobile
         }
+    };
+
+    // Video constraint restricting stream resolution so QR engine parses fast without lag
+    const cameraConstraints = {
+        facingMode: { exact: "environment" },
+        width: { min: 640, ideal: 1280, max: 1920 },
+        height: { min: 480, ideal: 720, max: 1080 }
+    };
+
+    try {
+        await html5QrCode.start(
+            cameraConstraints,
+            config,
+            onScanSuccess,
+            () => {}
+        );
+        document.getElementById('reticleBox').classList.remove('hidden');
+    } catch (err) {
+        // Fallback constraint if exact environment mode is rejected by browser
+        try {
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                () => {}
+            );
+            document.getElementById('reticleBox').classList.remove('hidden');
+        } catch (e) {
+            console.error("Camera start failed:", e);
+            document.getElementById('scannerStatusText').innerText = "Camera Offline";
+        }
+    }
+}
 
         async function stopBackCamera() {
             if (html5QrCode && html5QrCode.isScanning) {
