@@ -236,16 +236,16 @@
 
                     <div>
                         <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Phone Number *</label>
-                        <input type="tel" id="buyerPhone" required placeholder="e.g. 070 000 0000" 
+                        <input type="tel" id="buyerPhone" required placeholder="e.g. +27 82 123 4567" 
                             class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ticket Number</label>
-    <input type="text" id="buyerTicketId" readonly
-        class="w-full bg-gray-800/80 border border-gray-700 rounded-lg px-3.5 py-2.5 text-sm font-mono text-amber-400 font-bold cursor-not-allowed focus:outline-none">
-</div>
+                            <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Ticket ID *</label>
+                            <input type="text" id="buyerTicketId" required
+                                class="w-full bg-gray-900 border border-gray-700 focus:border-amber-500 rounded-xl px-3.5 py-3 text-sm font-mono text-amber-400 font-bold focus:outline-none transition uppercase">
+                        </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Tier</label>
                             <select id="buyerTier" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
@@ -310,7 +310,7 @@
                                 </div>
                                 <div>
                                     <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Phone</span>
-                                    <p class="text-xs text-gray-300 font-mono" id="previewBuyerPhone">070 000 0000</p>
+                                    <p class="text-xs text-gray-300 font-mono" id="previewBuyerPhone">+27 00 000 0000</p>
                                 </div>
                                 <div>
                                     <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Tier</span>
@@ -655,28 +655,27 @@
 
         // Load Tickets from Supabase Cloud
         async function loadTicketsFromCloud() {
-    const { data, error } = await supabaseClient
-        .from('tickets')
-        .select('*')
-        .order('created_at', { ascending: false });
-            
-    if (!error && data) {
-        tickets = data.map(t => ({
-            ticketId: t.ticket_id,
-            name: t.name,
-            phone: t.phone,
-            tier: t.tier,
-            soldBy: t.sold_by,
-            status: t.status,
-            createdAt: t.created_at,
-            checkInTime: t.check_in_time,
-            checkedInBy: t.checked_in_by
-        }));
-        updateStats();
-        renderAttendeesTable();
-        updateNextTicketIdInput(); // <--- Add/Ensure this line is here!
-    }
-}
+            const { data, error } = await supabaseClient
+                .from('tickets')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (!error && data) {
+                tickets = data.map(t => ({
+                    ticketId: t.ticket_id,
+                    name: t.name,
+                    phone: t.phone,
+                    tier: t.tier,
+                    soldBy: t.sold_by,
+                    status: t.status,
+                    createdAt: t.created_at,
+                    checkInTime: t.check_in_time,
+                    checkedInBy: t.checked_in_by
+                }));
+                updateStats();
+                renderAttendeesTable();
+            }
+        }
 
         // Settings Management
         function loadSettings() {
@@ -725,21 +724,20 @@
         }
 
         function updateNextTicketIdInput() {
-    let maxNum = 0;
-    
-    tickets.forEach(t => {
-        if (t.ticketId && t.ticketId.startsWith(settings.prefix)) {
-            const numPart = parseInt(t.ticketId.replace(settings.prefix, ''), 10);
-            if (!isNaN(numPart) && numPart > maxNum) {
-                maxNum = numPart;
-            }
+            const formattedNum = String(settings.counter).padStart(3, '0');
+            document.getElementById('buyerTicketId').value = `${settings.prefix}${formattedNum}`;
         }
-    });
 
-    const nextNum = maxNum + 1;
-    const formattedNum = String(nextNum).padStart(3, '0');
-    document.getElementById('buyerTicketId').value = `${settings.prefix}${formattedNum}`;
-}
+        function updateStats() {
+            const total = tickets.length;
+            const checkedIn = tickets.filter(t => t.status === 'CHECKED_IN').length;
+            const remaining = total - checkedIn;
+
+            document.getElementById('statTotalIssued').innerText = total;
+            document.getElementById('statCheckedIn').innerText = checkedIn;
+            document.getElementById('statRemaining').innerText = remaining;
+            document.getElementById('attendeeBadgeCount').innerText = total;
+        }
 
         // Generate & Sync Ticket to Supabase Cloud
         async function handleGenerateTicket(e) {
@@ -791,6 +789,12 @@
             };
 
             tickets.unshift(newTicket);
+
+            const formattedNum = String(settings.counter).padStart(3, '0');
+            if (ticketId === `${settings.prefix}${formattedNum}`) {
+                settings.counter++;
+                localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+            }
 
             updateStats();
             renderAttendeesTable();
