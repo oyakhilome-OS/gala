@@ -655,27 +655,28 @@
 
         // Load Tickets from Supabase Cloud
         async function loadTicketsFromCloud() {
-            const { data, error } = await supabaseClient
-                .from('tickets')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (!error && data) {
-                tickets = data.map(t => ({
-                    ticketId: t.ticket_id,
-                    name: t.name,
-                    phone: t.phone,
-                    tier: t.tier,
-                    soldBy: t.sold_by,
-                    status: t.status,
-                    createdAt: t.created_at,
-                    checkInTime: t.check_in_time,
-                    checkedInBy: t.checked_in_by
-                }));
-                updateStats();
-                renderAttendeesTable();
-            }
-        }
+    const { data, error } = await supabaseClient
+        .from('tickets')
+        .select('*')
+        .order('created_at', { ascending: false });
+            
+    if (!error && data) {
+        tickets = data.map(t => ({
+            ticketId: t.ticket_id,
+            name: t.name,
+            phone: t.phone,
+            tier: t.tier,
+            soldBy: t.sold_by,
+            status: t.status,
+            createdAt: t.created_at,
+            checkInTime: t.check_in_time,
+            checkedInBy: t.checked_in_by
+        }));
+        updateStats();
+        renderAttendeesTable();
+        updateNextTicketIdInput(); // <--- Add/Ensure this line is here!
+    }
+}
 
         // Settings Management
         function loadSettings() {
@@ -724,20 +725,21 @@
         }
 
         function updateNextTicketIdInput() {
-            const formattedNum = String(settings.counter).padStart(3, '0');
-            document.getElementById('buyerTicketId').value = `${settings.prefix}${formattedNum}`;
+    let maxNum = 0;
+    
+    tickets.forEach(t => {
+        if (t.ticketId && t.ticketId.startsWith(settings.prefix)) {
+            const numPart = parseInt(t.ticketId.replace(settings.prefix, ''), 10);
+            if (!isNaN(numPart) && numPart > maxNum) {
+                maxNum = numPart;
+            }
         }
+    });
 
-        function updateStats() {
-            const total = tickets.length;
-            const checkedIn = tickets.filter(t => t.status === 'CHECKED_IN').length;
-            const remaining = total - checkedIn;
-
-            document.getElementById('statTotalIssued').innerText = total;
-            document.getElementById('statCheckedIn').innerText = checkedIn;
-            document.getElementById('statRemaining').innerText = remaining;
-            document.getElementById('attendeeBadgeCount').innerText = total;
-        }
+    const nextNum = maxNum + 1;
+    const formattedNum = String(nextNum).padStart(3, '0');
+    document.getElementById('buyerTicketId').value = `${settings.prefix}${formattedNum}`;
+}
 
         // Generate & Sync Ticket to Supabase Cloud
         async function handleGenerateTicket(e) {
@@ -789,12 +791,6 @@
             };
 
             tickets.unshift(newTicket);
-
-            const formattedNum = String(settings.counter).padStart(3, '0');
-            if (ticketId === `${settings.prefix}${formattedNum}`) {
-                settings.counter++;
-                localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
-            }
 
             updateStats();
             renderAttendeesTable();
