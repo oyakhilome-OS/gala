@@ -602,6 +602,11 @@
             loadTicketsFromCloud();
             updateNextTicketIdInput();
             renderHeaderAndPreviewDefaults();
+
+            // Add this at the bottom of window.onload
+setInterval(() => {
+    loadTicketsFromCloud();
+}, 5000); // Checks for new sales every 5 seconds across all vendor phones
         };
 
         function renderAdminUI() {
@@ -742,6 +747,27 @@
         // Generate & Sync Ticket to Supabase Cloud
         async function handleGenerateTicket(e) {
             e.preventDefault();
+
+            // 1. Force instant cloud fetch FIRST so we always have the newest database sequence
+    await loadTicketsFromCloud();
+
+    if (!currentVendor) {
+        alert("Please log in with your seller PIN first.");
+        document.getElementById('vendorLoginModal').classList.remove('hidden');
+        return;
+    }
+
+    // Re-grab the latest dynamically computed ID
+    const name = document.getElementById('buyerName').value.trim();
+    const phone = document.getElementById('buyerPhone').value.trim();
+    const ticketId = document.getElementById('buyerTicketId').value.trim().toUpperCase();
+    const tier = document.getElementById('buyerTier').value;
+
+    if (tickets.some(t => t.ticketId === ticketId)) {
+        alert(`Ticket ID ${ticketId} was just issued by another vendor! Your ID has been auto-updated to the next available number. Please try again.`);
+        updateNextTicketIdInput();
+        return;
+    }
 
             if (!currentVendor) {
                 alert("Please log in with your seller PIN first.");
