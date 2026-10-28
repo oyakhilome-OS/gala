@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gala Night - Ticket Generator & Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gala Night 2026 - Mobile Ticket Manager</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -21,6 +21,7 @@
     
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -32,7 +33,8 @@
                             700: '#a16207',
                         },
                         darkgala: '#0c0e14',
-                        cardgala: '#151922'
+                        cardgala: '#151922',
+                        bordergala: '#232936'
                     },
                     fontFamily: {
                         cinzel: ['Cinzel', 'serif'],
@@ -45,248 +47,259 @@
     <style>
         .gold-gradient-text {
             color: #E2B755;
+            background: linear-gradient(135deg, #FFF5C0 0%, #E2B755 50%, #A67C1E 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         .ticket-pattern {
             background-color: #11141c;
+            background-image: radial-gradient(#eab308 0.4px, transparent 0.4px);
+            background-size: 16px 16px;
         }
         /* Custom overrides for Html5QrcodeScanner UI */
-        #reader__dashboard_section_csr button, #reader__dashboard_section_swaplink {
+        #reader {
+            border: none !important;
+            width: 100% !important;
+        }
+        #reader video {
+            object-fit: cover !important;
+            border-radius: 0.75rem !important;
+        }
+        #reader__dashboard_section_csr button, 
+        #reader__dashboard_section_swaplink {
             background-color: #1f2937 !important;
             color: #facc15 !important;
             border: 1px solid #374151 !important;
-            padding: 6px 12px !important;
-            border-radius: 6px !important;
-            font-size: 12px !important;
+            padding: 10px 16px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
             font-weight: 600 !important;
-            margin-top: 6px !important;
-        }
-        #reader__dashboard_section_csr button:hover {
-            background-color: #374151 !important;
+            margin-top: 8px !important;
+            width: 100% !important;
+            touch-action: manipulation;
         }
         #reader select {
             background-color: #0f172a !important;
             color: #ffffff !important;
             border: 1px solid #334155 !important;
-            padding: 6px !important;
-            border-radius: 6px !important;
-            font-size: 12px !important;
+            padding: 8px 12px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            width: 100% !important;
+            margin-bottom: 8px !important;
         }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #11141c; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0c0e14; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
     </style>
 </head>
-<body class="bg-darkgala text-gray-200 min-h-screen font-sans antialiased flex flex-col">
+<body class="bg-darkgala text-gray-200 min-h-screen font-sans antialiased flex flex-col selection:bg-amber-500 selection:text-black overflow-x-hidden">
 
     <!-- Modal: Vendor PIN Login -->
-    <div id="vendorLoginModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-cardgala border border-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
-            <div class="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl mx-auto">
-                <i class="fa-solid fa-lock"></i>
+    <div id="vendorLoginModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-cardgala border border-amber-500/20 rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in duration-200">
+            <div class="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl mx-auto shadow-inner">
+                <i class="fa-solid fa-shield-halved"></i>
             </div>
             <div>
-                <h2 class="text-xl font-bold font-cinzel text-white">Seller Authentication</h2>
-                <p class="text-xs text-gray-400 mt-1">Enter your assigned vendor PIN to start issuing tickets.</p>
+                <h2 class="text-2xl font-bold font-cinzel text-white tracking-wide">Vendor Portal</h2>
+                <p class="text-xs text-gray-400 mt-1.5 leading-relaxed">Enter your seller PIN code to authenticate device session.</p>
             </div>
             
-            <form onsubmit="handleVendorLogin(event)" class="space-y-3">
-                <input type="password" id="vendorPinInput" required maxlength="6" placeholder="Enter PIN (e.g. 1234)" 
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-center text-lg tracking-widest text-white font-mono focus:outline-none focus:border-amber-500">
-                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-lg transition text-sm shadow-lg shadow-amber-500/20">
+            <form onsubmit="handleVendorLogin(event)" class="space-y-4">
+                <div>
+                    <input type="password" id="vendorPinInput" required maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="••••" 
+                        class="w-full bg-gray-900 border border-gray-700 focus:border-amber-500 rounded-xl px-4 py-3.5 text-center text-2xl tracking-[0.5em] text-white font-mono focus:outline-none transition shadow-inner">
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-600 active:scale-95 text-black font-bold rounded-xl transition text-sm shadow-lg shadow-amber-500/20 uppercase tracking-wider">
                     Unlock Terminal
                 </button>
             </form>
-            <p id="loginErrorMsg" class="text-xs text-red-400 hidden"></p>
+            <p id="loginErrorMsg" class="text-xs text-red-400 font-semibold hidden"></p>
         </div>
     </div>
 
-    <!-- Top Navigation / Header -->
-    <header class="border-b border-gray-800 bg-cardgala/80 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-600 via-amber-400 to-yellow-200 flex items-center justify-center text-black font-bold text-xl shadow-lg shadow-amber-500/20">
-                    <i class="fa-solid font-cinzel">G</i>
+    <!-- Mobile Top Navigation Header -->
+    <header class="border-b border-bordergala bg-cardgala/95 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+            <!-- Brand & Event Info -->
+            <div class="flex items-center space-x-2.5 min-w-0">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-yellow-600 via-amber-400 to-yellow-200 flex-shrink-0 flex items-center justify-center text-black font-bold text-lg shadow-md shadow-amber-500/20">
+                    <span class="font-cinzel font-black">G</span>
                 </div>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold font-cinzel gold-gradient-text tracking-wider" id="headerEventTitle">GALA NIGHT 2026</h1>
-                    <p class="text-xs text-gray-400 flex items-center gap-2">
-                        <span><i class="fa-regular fa-calendar text-amber-500 mr-1"></i><span id="headerEventDate">Saturday, Nov 28, 2026</span></span>
-                        <span>•</span>
-                        <span><i class="fa-solid fa-location-dot text-amber-500 mr-1"></i><span id="headerEventVenue">Winners Chapel, Cape Town</span></span>
+                <div class="min-w-0">
+                    <h1 class="text-base sm:text-lg font-bold font-cinzel gold-gradient-text truncate tracking-wide" id="headerEventTitle">GALA NIGHT 2026</h1>
+                    <p class="text-[11px] text-gray-400 truncate flex items-center gap-1">
+                        <i class="fa-solid fa-location-dot text-amber-500 text-[10px]"></i>
+                        <span id="headerEventVenue" class="truncate">Winners Chapel, Cape Town</span>
                     </p>
                 </div>
             </div>
 
-            <!-- Header Actions & Vendor Info -->
-            <div class="flex items-center space-x-3">
-                <div class="flex items-center gap-2 bg-gray-900 border border-gray-800 px-3 py-1.5 rounded-lg text-xs">
-                    <span class="text-gray-400">Seller:</span>
-                    <span id="currentVendorDisplay" class="font-bold text-amber-400">-</span>
-                    <button onclick="logoutVendor()" class="ml-1 text-gray-500 hover:text-red-400 transition" title="Switch Seller">
+            <!-- Header Vendor Badge & Admin Gear -->
+            <div class="flex items-center space-x-2 flex-shrink-0">
+                <div class="flex items-center gap-1.5 bg-gray-900/90 border border-gray-800 px-2.5 py-1.5 rounded-lg text-xs">
+                    <i class="fa-solid fa-circle-user text-amber-400 text-xs"></i>
+                    <span id="currentVendorDisplay" class="font-bold text-amber-400 max-w-[70px] sm:max-w-[100px] truncate">-</span>
+                    <button onclick="logoutVendor()" class="ml-1 text-gray-400 hover:text-red-400 p-0.5 transition" title="Switch Seller">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
                 <div id="adminSettingsButtonContainer">
-                    <!-- Injected dynamically if Admin -->
+                    <!-- Dynamic Admin Settings Button -->
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <!-- Main Mobile Shell Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 space-y-4">
 
-        <!-- Live Statistics Counter -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-cardgala border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden">
-                <div class="z-10">
-                    <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Total Tickets Issued</p>
-                    <h2 class="text-3xl font-bold text-white mt-1" id="statTotalIssued">0</h2>
-                </div>
-                <div class="w-12 h-12 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xl z-10">
-                    <i class="fa-solid fa-ticket"></i>
+        <!-- Responsive Live Statistics Cards -->
+        <div class="grid grid-cols-3 gap-2 sm:gap-4">
+            <div class="bg-cardgala border border-bordergala rounded-xl p-3 flex flex-col justify-between shadow-md relative overflow-hidden">
+                <p class="text-[10px] sm:text-xs uppercase tracking-wider text-gray-400 font-semibold truncate">Issued</p>
+                <div class="flex items-baseline justify-between mt-1">
+                    <h2 class="text-xl sm:text-3xl font-bold text-white" id="statTotalIssued">0</h2>
+                    <i class="fa-solid fa-ticket text-amber-500/40 text-xs sm:text-lg"></i>
                 </div>
             </div>
 
-            <div class="bg-cardgala border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden">
-                <div class="z-10">
-                    <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Checked In / Scanned</p>
-                    <h2 class="text-3xl font-bold text-emerald-400 mt-1" id="statCheckedIn">0</h2>
-                </div>
-                <div class="w-12 h-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl z-10">
-                    <i class="fa-solid fa-circle-check"></i>
+            <div class="bg-cardgala border border-bordergala rounded-xl p-3 flex flex-col justify-between shadow-md relative overflow-hidden">
+                <p class="text-[10px] sm:text-xs uppercase tracking-wider text-gray-400 font-semibold truncate">Scanned</p>
+                <div class="flex items-baseline justify-between mt-1">
+                    <h2 class="text-xl sm:text-3xl font-bold text-emerald-400" id="statCheckedIn">0</h2>
+                    <i class="fa-solid fa-circle-check text-emerald-500/40 text-xs sm:text-lg"></i>
                 </div>
             </div>
 
-            <div class="bg-cardgala border border-gray-800 rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden">
-                <div class="z-10">
-                    <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Remaining / Unused</p>
-                    <h2 class="text-3xl font-bold text-amber-400 mt-1" id="statRemaining">0</h2>
-                </div>
-                <div class="w-12 h-12 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xl z-10">
-                    <i class="fa-solid fa-clock"></i>
+            <div class="bg-cardgala border border-bordergala rounded-xl p-3 flex flex-col justify-between shadow-md relative overflow-hidden">
+                <p class="text-[10px] sm:text-xs uppercase tracking-wider text-gray-400 font-semibold truncate">Remaining</p>
+                <div class="flex items-baseline justify-between mt-1">
+                    <h2 class="text-xl sm:text-3xl font-bold text-amber-400" id="statRemaining">0</h2>
+                    <i class="fa-solid fa-clock text-amber-500/40 text-xs sm:text-lg"></i>
                 </div>
             </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <div class="flex border-b border-gray-800 space-x-2 sm:space-x-6 overflow-x-auto">
-            <button onclick="switchTab('issue')" id="tabBtn-issue" class="py-3 px-4 text-sm font-semibold border-b-2 border-amber-500 text-amber-400 flex items-center gap-2 transition whitespace-nowrap">
-                <i class="fa-solid fa-plus-circle"></i> Issue New Ticket
+        <!-- Touch-Optimized Navigation Tabs -->
+        <nav class="flex border-b border-bordergala bg-cardgala/40 p-1 rounded-xl gap-1">
+            <button onclick="switchTab('issue')" id="tabBtn-issue" class="flex-1 py-2.5 px-2 text-xs sm:text-sm font-semibold rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center gap-1.5 transition active:scale-95">
+                <i class="fa-solid fa-plus-circle text-xs"></i> <span>Issue</span>
             </button>
-            <button onclick="switchTab('scanner')" id="tabBtn-scanner" class="py-3 px-4 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition whitespace-nowrap">
-                <i class="fa-solid fa-qrcode"></i> Check-in Scanner
+            <button onclick="switchTab('scanner')" id="tabBtn-scanner" class="flex-1 py-2.5 px-2 text-xs sm:text-sm font-semibold rounded-lg text-gray-400 hover:text-gray-200 flex items-center justify-center gap-1.5 transition active:scale-95">
+                <i class="fa-solid fa-qrcode text-xs"></i> <span>Scanner</span>
             </button>
-            <button onclick="switchTab('attendees')" id="tabBtn-attendees" class="py-3 px-4 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition whitespace-nowrap">
-                <i class="fa-solid fa-users"></i> Attendees List (<span id="attendeeBadgeCount">0</span>)
+            <button onclick="switchTab('attendees')" id="tabBtn-attendees" class="flex-1 py-2.5 px-2 text-xs sm:text-sm font-semibold rounded-lg text-gray-400 hover:text-gray-200 flex items-center justify-center gap-1.5 transition active:scale-95">
+                <i class="fa-solid fa-users text-xs"></i> <span>Guests (<span id="attendeeBadgeCount">0</span>)</span>
             </button>
-        </div>
+        </nav>
 
         <!-- TAB 1: Issue Ticket Section -->
-        <div id="tab-issue" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Form Side -->
-            <div class="lg:col-span-5 bg-cardgala border border-gray-800 rounded-xl p-6 shadow-xl h-fit">
-                <h2 class="text-lg font-bold font-cinzel text-white mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-user-plus text-amber-500"></i> Buyer Details
-                </h2>
+        <div id="tab-issue" class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-6">
+            <!-- Buyer Form -->
+            <div class="lg:col-span-5 bg-cardgala border border-bordergala rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
+                <div class="border-b border-gray-800 pb-3 flex items-center justify-between">
+                    <h2 class="text-base font-bold font-cinzel text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-amber-500 text-sm"></i> Ticket Generator
+                    </h2>
+                    <span class="text-[11px] text-amber-400/80 font-mono" id="currentDateBadge">Nov 2026</span>
+                </div>
                 
-                <form id="issueTicketForm" class="space-y-4" onsubmit="handleGenerateTicket(event)">
+                <form id="issueTicketForm" class="space-y-3.5" onsubmit="handleGenerateTicket(event)">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Attendee Full Name *</label>
-                        <input type="text" id="buyerName" required placeholder="e.g. John Doe" 
-                            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                        <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Attendee Name *</label>
+                        <input type="text" id="buyerName" required placeholder="Full Name" 
+                            class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Phone Number *</label>
-                        <input type="tel" id="buyerPhone" required placeholder="e.g. 073 234 5478" 
-                            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                        <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Phone Number *</label>
+                        <input type="tel" id="buyerPhone" required placeholder="e.g. +27 82 123 4567" 
+                            class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ticket Number</label>
-                            <input type="text" id="buyerTicketId" required
-                                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2.5 text-sm font-mono text-amber-400 font-bold focus:outline-none focus:border-amber-500 transition">
+                            <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Ticket ID</label>
+                            <input type="text" id="buyerTicketId" required readonly
+                                class="w-full bg-gray-950 border border-gray-800 rounded-xl px-3.5 py-3 text-sm font-mono text-amber-400 font-bold focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ticket Tier</label>
-                            <select id="buyerTier" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition">
-                                <option value="Single" selected>Single</option>
-                                <option value="Couple">Couple</option>
+                            <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Tier</label>
+                            <select id="buyerTier" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                                <option value="Single" selected>Single Pass</option>
+                                <option value="Couple">Couple Pass</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="pt-2">
-                        <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-black font-bold py-3 px-4 rounded-lg shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate & Issue Ticket
-                        </button>
-                    </div>
+                    <button type="submit" class="w-full mt-2 bg-gradient-to-r from-amber-500 to-yellow-600 active:scale-95 text-black font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Issue Ticket Now
+                    </button>
                 </form>
             </div>
 
             <!-- Preview / Ticket Actions Side -->
-            <div class="lg:col-span-7 flex flex-col items-center justify-start space-y-4">
-                <div class="w-full flex items-center justify-between">
+            <div class="lg:col-span-7 flex flex-col items-center space-y-3">
+                <div class="w-full flex items-center justify-between px-1">
                     <span class="text-xs uppercase tracking-widest text-gray-400 font-semibold">Live Ticket Preview</span>
                     <div class="flex items-center gap-2">
-                        <button onclick="downloadTicketPNG()" id="downloadBtn" disabled class="px-3 py-1.5 text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg border border-gray-700 transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-download text-amber-400"></i> Download PNG
+                        <button onclick="downloadTicketPNG()" id="downloadBtn" disabled class="px-3 py-2 text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 disabled:opacity-40 rounded-xl border border-gray-700 transition flex items-center gap-1.5 active:scale-95">
+                            <i class="fa-solid fa-download text-amber-400"></i> Download
                         </button>
-                        <button onclick="shareTicket()" id="shareBtn" disabled class="px-3 py-1.5 text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg border border-gray-700 transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-share-nodes text-amber-400"></i> Share Image
+                        <button onclick="shareTicket()" id="shareBtn" disabled class="px-3 py-2 text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 disabled:opacity-40 rounded-xl border border-amber-500/30 transition flex items-center gap-1.5 active:scale-95">
+                            <i class="fa-solid fa-share-nodes text-amber-400"></i> Share PNG
                         </button>
                     </div>
                 </div>
 
-                <!-- Decorative Gala Ticket Box -->
-                <div class="w-full max-w-md bg-gradient-to-br from-gray-900 via-cardgala to-black p-1 rounded-2xl shadow-2xl border border-amber-500/40">
-                    <div id="printableTicket" class="relative bg-cardgala rounded-xl overflow-hidden border border-amber-500/30 p-6 flex flex-col justify-between ticket-pattern min-h-[460px]">
+                <!-- Scaled Mobile Ticket Card -->
+                <div class="w-full max-w-sm sm:max-w-md bg-gradient-to-br from-gray-900 via-cardgala to-black p-1 rounded-2xl shadow-2xl border border-amber-500/40">
+                    <div id="printableTicket" class="relative bg-cardgala rounded-xl overflow-hidden border border-amber-500/30 p-5 flex flex-col justify-between ticket-pattern min-h-[420px]">
                         <div class="absolute top-2 left-2 right-2 bottom-2 border border-amber-500/20 pointer-events-none rounded-lg"></div>
 
-                        <div class="text-center space-y-1 z-10 pt-2">
-                            <p class="text-[10px] tracking-[0.3em] font-semibold text-amber-400 uppercase">OFFICIAL ADMISSION TICKET</p>
-                            <h2 class="text-2xl font-bold font-cinzel text-amber-400 tracking-wider" id="previewEventTitle">GALA NIGHT 2026</h2>
-                            <p class="text-xs text-gray-300" id="previewEventVenue">Winners Chapel, Cape Town</p>
-                            <p class="text-[11px] text-gray-400" id="previewEventDate">Saturday, Nov 28, 2026</p>
+                        <div class="text-center space-y-1 z-10 pt-1">
+                            <p class="text-[9px] tracking-[0.25em] font-bold text-amber-400 uppercase">OFFICIAL ADMISSION TICKET</p>
+                            <h2 class="text-xl sm:text-2xl font-bold font-cinzel text-amber-400 tracking-wider" id="previewEventTitle">GALA NIGHT 2026</h2>
+                            <p class="text-[11px] text-gray-300" id="previewEventVenue">Winners Chapel, Cape Town</p>
+                            <p class="text-[10px] text-gray-400" id="previewEventDate">Saturday, Nov 28, 2026</p>
                         </div>
 
-                        <div class="relative my-4 flex items-center justify-center">
+                        <div class="relative my-3 flex items-center justify-center">
                             <div class="w-full border-t border-dashed border-amber-500/40"></div>
-                            <div class="absolute -left-8 w-5 h-5 bg-darkgala rounded-full border-r border-amber-500/40"></div>
-                            <div class="absolute -right-8 w-5 h-5 bg-darkgala rounded-full border-l border-amber-500/40"></div>
+                            <div class="absolute -left-7 w-4 h-4 bg-darkgala rounded-full border-r border-amber-500/40"></div>
+                            <div class="absolute -right-7 w-4 h-4 bg-darkgala rounded-full border-l border-amber-500/40"></div>
                         </div>
 
-                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 z-10 py-2">
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 z-10 py-1">
                             <div class="flex flex-col items-center">
                                 <div class="p-2 bg-white rounded-xl shadow-md border-2 border-amber-400/80">
-                                    <div id="qrcode" class="w-32 h-32 flex items-center justify-center text-xs text-gray-400">
-                                        <span class="text-center p-2 text-gray-500">Submit form to render QR Code</span>
+                                    <div id="qrcode" class="w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center text-xs text-gray-400">
+                                        <span class="text-center p-2 text-gray-500 text-[10px]">Fill details to generate QR</span>
                                     </div>
                                 </div>
-                                <span class="text-[10px] text-gray-400 font-mono mt-2" id="previewTicketIdLabel">GALA-001</span>
+                                <span class="text-[10px] text-amber-400 font-mono mt-1.5 font-bold tracking-widest" id="previewTicketIdLabel">GALA-001</span>
                             </div>
 
                             <div class="flex-1 space-y-2 text-center sm:text-left">
                                 <div>
-                                    <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold block">Guest Name</span>
-                                    <p class="text-base font-bold text-white leading-tight font-cinzel" id="previewBuyerName">John Doe</p>
+                                    <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Guest Name</span>
+                                    <p class="text-sm sm:text-base font-bold text-white leading-tight font-cinzel" id="previewBuyerName">Guest Name</p>
                                 </div>
                                 <div>
-                                    <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold block">Phone Number</span>
-                                    <p class="text-xs text-gray-300 font-mono" id="previewBuyerPhone">075 000 0000</p>
+                                    <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Phone</span>
+                                    <p class="text-xs text-gray-300 font-mono" id="previewBuyerPhone">+27 00 000 0000</p>
                                 </div>
                                 <div>
-                                    <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold block">Ticket Tier</span>
-                                    <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40" id="previewBuyerTier">Single</span>
+                                    <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Tier</span>
+                                    <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40" id="previewBuyerTier">Single</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-4 pt-3 border-t border-gray-800 text-center z-10">
-                            <p class="text-[9px] text-gray-400 tracking-wide">Present this QR code at venue entrance for single-entry check-in.</p>
+                        <div class="mt-3 pt-2 border-t border-gray-800/80 text-center z-10">
+                            <p class="text-[9px] text-gray-400 tracking-wide">Present QR code at entrance for single-entry validation.</p>
                         </div>
                     </div>
                 </div>
@@ -294,66 +307,69 @@
         </div>
 
         <!-- TAB 2: Check-in Scanner Section -->
-        <div id="tab-scanner" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="lg:col-span-7 bg-cardgala border border-gray-800 rounded-xl p-6 shadow-xl flex flex-col items-center">
-                <div class="w-full flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-bold font-cinzel text-white flex items-center gap-2">
-                        <i class="fa-solid fa-camera text-amber-500"></i> Live QR Code Scanner
+        <div id="tab-scanner" class="hidden space-y-4 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-6">
+            <div class="lg:col-span-7 bg-cardgala border border-bordergala rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col items-center">
+                <div class="w-full flex items-center justify-between mb-3">
+                    <h2 class="text-base font-bold font-cinzel text-white flex items-center gap-2">
+                        <i class="fa-solid fa-camera text-amber-500 text-sm"></i> QR Code Scanner
                     </h2>
-                    <span class="text-xs text-gray-400">Point camera at ticket QR</span>
+                    <span class="text-[11px] text-gray-400">Live Camera</span>
                 </div>
 
-                <div class="w-full max-w-md bg-gray-900 rounded-xl overflow-hidden border-2 border-amber-500/30 p-2 relative">
-                    <div id="reader" class="w-full"></div>
+                <!-- Scanner Outer Frame -->
+                <div class="w-full max-w-sm bg-gray-950 rounded-2xl overflow-hidden border-2 border-amber-500/30 p-2 relative shadow-inner">
+                    <div id="reader" class="w-full min-h-[260px] flex items-center justify-center"></div>
                 </div>
 
-                <div class="w-full max-w-md mt-4 flex items-center justify-end gap-2">
-                    <label class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-semibold border border-gray-700 transition cursor-pointer flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-image text-amber-400"></i> Upload QR Image
+                <div class="w-full max-w-sm mt-3 flex items-center justify-end">
+                    <label class="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-300 rounded-xl text-xs font-semibold border border-gray-700 transition cursor-pointer flex items-center justify-center gap-2 active:scale-95">
+                        <i class="fa-solid fa-file-image text-amber-400"></i> Upload QR Code Image
                         <input type="file" id="qrFileInput" accept="image/*" class="hidden" onchange="scanQRImage(event)">
                     </label>
                 </div>
 
-                <div class="w-full max-w-md mt-6 pt-5 border-t border-gray-800">
-                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-2">Manual Ticket ID Entry (Backup)</label>
+                <!-- Manual Backup Entry -->
+                <div class="w-full max-w-sm mt-4 pt-4 border-t border-gray-800">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Manual Ticket ID Verification</label>
                     <form onsubmit="handleManualLookup(event)" class="flex gap-2">
                         <input type="text" id="manualTicketInput" placeholder="e.g. GALA-001" required 
-                            class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2 text-sm text-white font-mono focus:outline-none focus:border-amber-500 uppercase">
-                        <button type="submit" class="bg-gray-800 hover:bg-gray-700 text-amber-400 px-4 py-2 rounded-lg text-sm font-semibold border border-gray-700 transition">
+                            class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-amber-500 uppercase">
+                        <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-black px-4 py-2.5 rounded-xl text-xs font-bold transition active:scale-95">
                             Verify
                         </button>
                     </form>
                 </div>
             </div>
 
-            <div class="lg:col-span-5 bg-cardgala border border-gray-800 rounded-xl p-6 shadow-xl flex flex-col justify-between">
+            <!-- Verification Status Box Stacked Directly Below on Mobile -->
+            <div class="lg:col-span-5 bg-cardgala border border-bordergala rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col justify-between">
                 <div>
-                    <h2 class="text-lg font-bold font-cinzel text-white mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-clipboard-check text-amber-500"></i> Verification Status
+                    <h2 class="text-base font-bold font-cinzel text-white mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-amber-500 text-sm"></i> Verification Feed
                     </h2>
 
-                    <div id="scanResultIdle" class="border border-dashed border-gray-800 rounded-xl p-8 text-center space-y-3">
-                        <i class="fa-solid fa-arrow-left text-3xl text-gray-700"></i>
-                        <p class="text-sm text-gray-400 font-medium">Scan a ticket QR code or type a Ticket ID to see verification details.</p>
+                    <div id="scanResultIdle" class="border border-dashed border-gray-800 rounded-xl p-6 text-center space-y-2">
+                        <i class="fa-solid fa-qrcode text-3xl text-gray-700"></i>
+                        <p class="text-xs text-gray-400 font-medium">Scan QR code or enter Ticket ID to inspect door status.</p>
                     </div>
 
-                    <div id="scanResultSuccess" class="hidden border-2 border-emerald-500/50 bg-emerald-950/20 rounded-xl p-5 space-y-4">
-                        <div class="flex items-center space-x-3 text-emerald-400 border-b border-emerald-500/20 pb-3">
-                            <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-xl">
+                    <div id="scanResultSuccess" class="hidden border-2 border-emerald-500/50 bg-emerald-950/20 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center space-x-3 text-emerald-400 border-b border-emerald-500/20 pb-2">
+                            <div class="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center text-lg flex-shrink-0">
                                 <i class="fa-solid fa-check"></i>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold">ENTRY APPROVED</h3>
-                                <p class="text-xs text-emerald-300">Ticket valid & checked in now!</p>
+                                <h3 class="text-base font-bold">ENTRY APPROVED</h3>
+                                <p class="text-[11px] text-emerald-300">Ticket valid & verified!</p>
                             </div>
                         </div>
-                        <div class="space-y-2 text-sm">
+                        <div class="space-y-1.5 text-xs">
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
-                                <span class="text-gray-400">Guest Name:</span>
-                                <span class="font-bold text-white" id="resName">-</span>
+                                <span class="text-gray-400">Guest:</span>
+                                <span class="font-bold text-white truncate max-w-[160px]" id="resName">-</span>
                             </div>
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
-                                <span class="text-gray-400">Ticket Number:</span>
+                                <span class="text-gray-400">Ticket ID:</span>
                                 <span class="font-mono text-amber-400 font-bold" id="resTicketId">-</span>
                             </div>
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
@@ -365,81 +381,89 @@
                                 <span class="text-amber-300 font-semibold" id="resTier">-</span>
                             </div>
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
-                                <span class="text-gray-400">Checked In By:</span>
+                                <span class="text-gray-400">Scanned By:</span>
                                 <span class="text-emerald-400 font-bold" id="resCheckedBy">-</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-400">Scan Timestamp:</span>
-                                <span class="text-xs text-gray-300 font-mono" id="resTime">-</span>
+                                <span class="text-gray-400">Time:</span>
+                                <span class="text-gray-300 font-mono" id="resTime">-</span>
                             </div>
                         </div>
                     </div>
 
-                    <div id="scanResultWarning" class="hidden border-2 border-red-500/50 bg-red-950/20 rounded-xl p-5 space-y-4">
-                        <div class="flex items-center space-x-3 text-red-400 border-b border-red-500/20 pb-3">
-                            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-xl">
+                    <div id="scanResultWarning" class="hidden border-2 border-red-500/50 bg-red-950/20 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center space-x-3 text-red-400 border-b border-red-500/20 pb-2">
+                            <div class="w-9 h-9 rounded-full bg-red-500/20 flex items-center justify-center text-lg flex-shrink-0">
                                 <i class="fa-solid fa-triangle-exclamation"></i>
                             </div>
                             <div>
-                                <h3 class="text-lg font-bold">ALREADY USED</h3>
-                                <p class="text-xs text-red-300">This ticket has already been scanned!</p>
+                                <h3 class="text-base font-bold">ALREADY CHECKED IN</h3>
+                                <p class="text-[11px] text-red-300">Ticket previously used!</p>
                             </div>
                         </div>
-                        <div class="space-y-2 text-sm">
+                        <div class="space-y-1.5 text-xs">
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
-                                <span class="text-gray-400">Guest Name:</span>
-                                <span class="font-bold text-white" id="warnName">-</span>
+                                <span class="text-gray-400">Guest:</span>
+                                <span class="font-bold text-white truncate max-w-[160px]" id="warnName">-</span>
                             </div>
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
-                                <span class="text-gray-400">Ticket Number:</span>
+                                <span class="text-gray-400">Ticket ID:</span>
                                 <span class="font-mono text-amber-400 font-bold" id="warnTicketId">-</span>
                             </div>
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
-                                <span class="text-gray-400">Scanned By:</span>
+                                <span class="text-gray-400">First Scanned By:</span>
                                 <span class="text-amber-300 font-semibold" id="warnCheckedBy">-</span>
                             </div>
-                            <div class="flex justify-between border-b border-gray-800/80 pb-1">
-                                <span class="text-gray-400">First Scanned At:</span>
-                                <span class="text-xs text-red-300 font-mono font-bold" id="warnTime">-</span>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Timestamp:</span>
+                                <span class="text-red-300 font-mono font-bold" id="warnTime">-</span>
                             </div>
                         </div>
                     </div>
 
-                    <div id="scanResultError" class="hidden border-2 border-red-600/50 bg-red-950/40 rounded-xl p-5 space-y-3 text-center">
-                        <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-2xl mx-auto">
+                    <div id="scanResultError" class="hidden border-2 border-red-600/50 bg-red-950/40 rounded-xl p-5 space-y-2 text-center">
+                        <div class="w-10 h-10 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center text-xl mx-auto">
                             <i class="fa-solid fa-xmark"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-red-400">INVALID TICKET</h3>
-                        <p class="text-xs text-gray-300">No matching ticket found in system database.</p>
+                        <h3 class="text-base font-bold text-red-400">INVALID TICKET</h3>
+                        <p class="text-xs text-gray-300">Ticket ID does not exist in database.</p>
                     </div>
                 </div>
 
-                <div class="mt-6">
-                    <button onclick="resetScanStatus()" class="w-full py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-semibold border border-gray-700 transition">
-                        Reset Status Window
+                <div class="mt-4">
+                    <button onclick="resetScanStatus()" class="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-gray-300 rounded-xl text-xs font-semibold border border-gray-800 transition active:scale-95">
+                        Reset Result View
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: Attendees List Section -->
-        <div id="tab-attendees" class="hidden space-y-4">
-            <div class="bg-cardgala border border-gray-800 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <!-- TAB 3: Attendees List Section (Responsive Cards for Mobile) -->
+        <div id="tab-attendees" class="hidden space-y-3">
+            <!-- Search & Filters -->
+            <div class="bg-cardgala border border-bordergala rounded-2xl p-3 sm:p-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
                 <div class="relative w-full sm:w-80">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-500 text-xs"></i>
                     <input type="text" id="searchInput" oninput="renderAttendeesTable()" placeholder="Search name, phone, vendor..." 
-                        class="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                        class="w-full bg-gray-900 border border-gray-700 rounded-xl pl-9 pr-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500 transition">
                 </div>
 
-                <div class="flex items-center gap-3 w-full sm:w-auto justify-end" id="attendeeHeaderActions">
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end" id="attendeeHeaderActions">
                     <!-- Dynamic Controls injected via JS based on Vendor Role -->
                 </div>
             </div>
 
-            <div class="bg-cardgala border border-gray-800 rounded-xl overflow-hidden shadow-xl">
-                <div class="overflow-x-auto">
+            <!-- Responsive Mobile Card List / Desktop Table Container -->
+            <div class="bg-cardgala border border-bordergala rounded-2xl overflow-hidden shadow-xl">
+                <!-- Mobile Card Layout -->
+                <div id="attendeesMobileList" class="block sm:hidden divide-y divide-gray-800/80">
+                    <!-- Rendered dynamically -->
+                </div>
+
+                <!-- Desktop Table View -->
+                <div class="hidden sm:block overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-300">
-                        <thead class="bg-gray-900/80 text-xs uppercase tracking-wider text-gray-400 border-b border-gray-800">
+                        <thead class="bg-gray-900/90 text-[11px] uppercase tracking-wider text-gray-400 border-b border-gray-800">
                             <tr>
                                 <th class="py-3.5 px-4 font-semibold">Ticket ID</th>
                                 <th class="py-3.5 px-4 font-semibold">Attendee Name</th>
@@ -454,7 +478,8 @@
                         </tbody>
                     </table>
                 </div>
-                <div id="emptyTableMessage" class="hidden p-8 text-center text-gray-500 text-sm">
+                
+                <div id="emptyTableMessage" class="hidden p-8 text-center text-gray-500 text-xs sm:text-sm">
                     No tickets generated yet. Issue a ticket to start!
                 </div>
             </div>
@@ -462,39 +487,39 @@
 
     </main>
 
-    <!-- Modal: Settings -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-cardgala border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <h2 class="text-xl font-bold font-cinzel text-white mb-4 flex items-center gap-2">
+    <!-- Modal: Event Settings (Admin Only) -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-cardgala border border-amber-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <h2 class="text-lg font-bold font-cinzel text-white mb-4 flex items-center gap-2">
                 <i class="fa-solid fa-sliders text-amber-500"></i> Event Settings
             </h2>
             
-            <form onsubmit="saveSettings(event)" class="space-y-4">
+            <form onsubmit="saveSettings(event)" class="space-y-3.5">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Event Name</label>
-                    <input type="text" id="settingTitle" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1">Event Name</label>
+                    <input type="text" id="settingTitle" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Date & Time</label>
-                    <input type="text" id="settingDate" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1">Date & Time</label>
+                    <input type="text" id="settingDate" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Venue Location</label>
-                    <input type="text" id="settingVenue" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+                    <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1">Venue Location</label>
+                    <input type="text" id="settingVenue" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Ticket Prefix</label>
-                        <input type="text" id="settingPrefix" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2 text-sm text-white font-mono uppercase focus:outline-none">
+                        <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1">Prefix</label>
+                        <input type="text" id="settingPrefix" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono uppercase focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Next Ticket #</label>
-                        <input type="number" id="settingCounter" required min="1" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3.5 py-2 text-sm text-white font-mono focus:outline-none">
+                        <label class="block text-[11px] font-semibold text-gray-400 uppercase mb-1">Next #</label>
+                        <input type="number" id="settingCounter" required min="1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:outline-none">
                     </div>
                 </div>
-                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-800">
-                    <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 bg-gray-800 text-gray-300 text-xs font-semibold rounded-lg">Cancel</button>
-                    <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold rounded-lg">Save Changes</button>
+                <div class="flex justify-end space-x-2 pt-3 border-t border-gray-800">
+                    <button type="button" onclick="closeSettingsModal()" class="px-4 py-2 bg-gray-800 text-gray-300 text-xs font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold rounded-xl">Save</button>
                 </div>
             </form>
         </div>
@@ -543,8 +568,8 @@
             const settingsContainer = document.getElementById('adminSettingsButtonContainer');
             if (currentVendor === 'Admin') {
                 settingsContainer.innerHTML = `
-                    <button onclick="openSettingsModal()" class="px-3 py-1.5 text-xs sm:text-sm font-medium bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition flex items-center gap-2">
-                        <i class="fa-solid fa-gear text-amber-500"></i> Settings
+                    <button onclick="openSettingsModal()" class="p-2 text-xs font-medium bg-gray-800 hover:bg-gray-700 text-amber-400 rounded-lg border border-gray-700 transition flex items-center justify-center active:scale-95" title="Event Settings">
+                        <i class="fa-solid fa-gear"></i>
                     </button>
                 `;
             } else {
@@ -565,7 +590,7 @@
                 .single();
 
             if (error || !data) {
-                errEl.innerText = "Invalid PIN code. Please check with admin.";
+                errEl.innerText = "Invalid seller PIN code.";
                 errEl.classList.remove('hidden');
                 return;
             }
@@ -651,7 +676,6 @@
 
         function renderHeaderAndPreviewDefaults() {
             document.getElementById('headerEventTitle').innerText = settings.title;
-            document.getElementById('headerEventDate').innerText = settings.date;
             document.getElementById('headerEventVenue').innerText = settings.venue;
 
             document.getElementById('previewEventTitle').innerText = settings.title;
@@ -680,7 +704,7 @@
             e.preventDefault();
 
             if (!currentVendor) {
-                alert("Please log in with your vendor PIN first.");
+                alert("Please log in with your seller PIN first.");
                 document.getElementById('vendorLoginModal').classList.remove('hidden');
                 return;
             }
@@ -758,8 +782,8 @@
 
             qrCodeInstance = new QRCode(qrContainer, {
                 text: payload,
-                width: 128,
-                height: 128,
+                width: 120,
+                height: 120,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
@@ -796,14 +820,12 @@
                             await navigator.share({
                                 files: [file],
                                 title: `${settings.title} Ticket`,
-                                text: `Here is your admission ticket for ${settings.title}!`
+                                text: `Admission ticket for ${name} - ${ticketId}`
                             });
-                        } catch (err) {
-                            console.log('Share aborted', err);
-                        }
+                        } catch (err) {}
                     } else {
                         downloadTicketPNG();
-                        alert("Direct file sharing is not supported on this browser, so your ticket image has been downloaded instead!");
+                        alert("Direct image sharing not supported on this browser. Ticket downloaded instead!");
                     }
                 }, 'image/png');
             } catch (err) {
@@ -817,22 +839,22 @@
                 const btnEl = document.getElementById(`tabBtn-${t}`);
                 if (t === tabName) {
                     tabEl.classList.remove('hidden');
-                    btnEl.classList.add('border-amber-500', 'text-amber-400');
-                    btnEl.classList.remove('border-transparent', 'text-gray-400');
+                    btnEl.classList.add('bg-amber-500/10', 'text-amber-400', 'border', 'border-amber-500/30');
+                    btnEl.classList.remove('text-gray-400');
                 } else {
                     tabEl.classList.add('hidden');
-                    btnEl.classList.remove('border-amber-500', 'text-amber-400');
-                    btnEl.classList.add('border-transparent', 'text-gray-400');
+                    btnEl.classList.remove('bg-amber-500/10', 'text-amber-400', 'border', 'border-amber-500/30');
+                    btnEl.classList.add('text-gray-400');
                 }
             });
         }
 
-        // Bulletproof Scanner Widget Initialization
+        // Scanner Widget Initialization
         function initScannerWidget() {
             if (!html5QrCodeScanner) {
                 html5QrCodeScanner = new Html5QrcodeScanner(
                     "reader", 
-                    { fps: 10, qrbox: { width: 220, height: 220 } },
+                    { fps: 10, qrbox: { width: 200, height: 200 } },
                     /* verbose= */ false
                 );
                 html5QrCodeScanner.render(onScanSuccess, (err) => {});
@@ -881,7 +903,7 @@
                     document.getElementById('warnName').innerText = ticket.name;
                     document.getElementById('warnTicketId').innerText = ticket.ticketId;
                     document.getElementById('warnCheckedBy').innerText = ticket.checkedInBy || 'Unknown';
-                    document.getElementById('warnTime').innerText = ticket.checkInTime ? new Date(ticket.checkInTime).toLocaleString() : 'Earlier';
+                    document.getElementById('warnTime').innerText = ticket.checkInTime ? new Date(ticket.checkInTime).toLocaleTimeString() : 'Earlier';
                     document.getElementById('scanResultWarning').classList.remove('hidden');
                 } else {
                     const checkInTimestamp = new Date().toISOString();
@@ -928,9 +950,10 @@
             document.getElementById('scanResultError').classList.add('hidden');
         }
 
-        // Attendees Table & Vendor Breakdown
+        // Attendees Table & Mobile Card Breakdown
         function renderAttendeesTable() {
             const tbody = document.getElementById('attendeesTableBody');
+            const mobileList = document.getElementById('attendeesMobileList');
             const emptyMsg = document.getElementById('emptyTableMessage');
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
             const filter = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : 'ALL';
@@ -939,25 +962,26 @@
             let adminButtonsHtml = '';
             if (currentVendor === 'Admin') {
                 adminButtonsHtml = `
-                    <button onclick="exportToCSV()" class="px-3.5 py-2 text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap">
-                        <i class="fa-solid fa-file-csv"></i> Export CSV
+                    <button onclick="exportToCSV()" class="px-2.5 py-2 text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 rounded-xl transition flex items-center gap-1 whitespace-nowrap active:scale-95">
+                        <i class="fa-solid fa-file-csv"></i> CSV
                     </button>
-                    <button onclick="confirmClearAll()" class="px-3.5 py-2 text-xs font-semibold bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/50 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap">
-                        <i class="fa-solid fa-trash"></i> Clear All
+                    <button onclick="confirmClearAll()" class="px-2.5 py-2 text-xs font-semibold bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/50 rounded-xl transition flex items-center gap-1 whitespace-nowrap active:scale-95">
+                        <i class="fa-solid fa-trash"></i> Reset
                     </button>
                 `;
             }
 
             actionsContainer.innerHTML = `
-                <select id="statusFilter" onchange="renderAttendeesTable()" class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
-                    <option value="ALL" ${filter === 'ALL' ? 'selected' : ''}>All Statuses</option>
-                    <option value="UNUSED" ${filter === 'UNUSED' ? 'selected' : ''}>Unused Only</option>
-                    <option value="CHECKED_IN" ${filter === 'CHECKED_IN' ? 'selected' : ''}>Checked-In Only</option>
+                <select id="statusFilter" onchange="renderAttendeesTable()" class="bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition">
+                    <option value="ALL" ${filter === 'ALL' ? 'selected' : ''}>All</option>
+                    <option value="UNUSED" ${filter === 'UNUSED' ? 'selected' : ''}>Unused</option>
+                    <option value="CHECKED_IN" ${filter === 'CHECKED_IN' ? 'selected' : ''}>Scanned</option>
                 </select>
                 ${adminButtonsHtml}
             `;
 
             tbody.innerHTML = '';
+            mobileList.innerHTML = '';
 
             const filtered = tickets.filter(t => {
                 const matchesSearch = t.name.toLowerCase().includes(search) ||
@@ -977,36 +1001,61 @@
             }
 
             filtered.forEach(ticket => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-800/40 transition";
-
                 const isChecked = ticket.status === 'CHECKED_IN';
                 const statusBadge = isChecked 
-                    ? `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Checked-In</span>`
-                    : `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">Unused</span>`;
+                    ? `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Checked-In</span>`
+                    : `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">Unused</span>`;
 
                 const checkedInByTag = ticket.checkedInBy 
                     ? `<span class="text-xs text-emerald-300 font-medium">${ticket.checkedInBy}</span>` 
                     : `<span class="text-xs text-gray-500">-</span>`;
 
                 const deleteButtonHtml = currentVendor === 'Admin' 
-                    ? `<button onclick="deleteTicket('${ticket.ticketId}')" title="Delete Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-red-400 rounded border border-gray-700 transition"><i class="fa-solid fa-trash-can"></i></button>`
+                    ? `<button onclick="deleteTicket('${ticket.ticketId}')" title="Delete Ticket" class="p-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-red-400 rounded-lg border border-gray-700 transition"><i class="fa-solid fa-trash-can"></i></button>`
                     : '';
 
+                // Desktop Row
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/40 transition";
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-mono font-bold text-amber-400">${ticket.ticketId}</td>
                     <td class="py-3 px-4 font-medium text-white">${ticket.name}</td>
                     <td class="py-3 px-4 text-xs font-semibold text-amber-300">${ticket.soldBy}</td>
                     <td class="py-3 px-4">${statusBadge}</td>
                     <td class="py-3 px-4">${checkedInByTag}</td>
-                    <td class="py-3 px-4 text-right space-x-2">
-                        <button onclick="viewTicketModal('${ticket.ticketId}')" title="Preview Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-amber-400 rounded border border-gray-700 transition">
+                    <td class="py-3 px-4 text-right space-x-1.5">
+                        <button onclick="viewTicketModal('${ticket.ticketId}')" title="Preview Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-amber-400 rounded-lg border border-gray-700 transition">
                             <i class="fa-solid fa-eye"></i>
                         </button>
                         ${deleteButtonHtml}
                     </td>
                 `;
                 tbody.appendChild(tr);
+
+                // Mobile Card Item
+                const card = document.createElement('div');
+                card.className = "p-3.5 space-y-2";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono font-bold text-sm text-amber-400">${ticket.ticketId}</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <h4 class="font-bold text-white text-sm font-cinzel">${ticket.name}</h4>
+                        <span class="text-xs text-gray-400 font-mono">${ticket.phone}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs border-t border-gray-800/60 pt-2 text-gray-400">
+                        <div>Seller: <span class="text-amber-300 font-medium">${ticket.soldBy}</span></div>
+                        <div>Door Scan: ${checkedInByTag}</div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="viewTicketModal('${ticket.ticketId}')" class="px-2 py-1 bg-gray-800 text-amber-400 rounded border border-gray-700 text-xs">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            ${deleteButtonHtml}
+                        </div>
+                    </div>
+                `;
+                mobileList.appendChild(card);
             });
         }
 
@@ -1015,7 +1064,7 @@
                 alert("Unauthorized action.");
                 return;
             }
-            if (confirm(`Are you sure you want to delete ticket ${ticketId}?`)) {
+            if (confirm(`Delete ticket ${ticketId}?`)) {
                 await supabaseClient.from('tickets').delete().eq('ticket_id', ticketId);
                 tickets = tickets.filter(t => t.ticketId !== ticketId);
                 updateStats();
@@ -1056,7 +1105,7 @@
 
         async function confirmClearAll() {
             if (currentVendor !== 'Admin') return;
-            if (confirm("WARNING: This will delete ALL ticket records from the cloud database! Are you sure?")) {
+            if (confirm("WARNING: Delete ALL tickets from database?")) {
                 await supabaseClient.from('tickets').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 tickets = [];
                 updateStats();
