@@ -350,8 +350,8 @@
             <i class="fa-solid fa-camera"></i>
         </div>
         <p class="text-xs text-gray-400">Camera is currently paused to save battery.</p>
-        <button onclick="startBackCamera()" class="py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg active:scale-95 transition">
-            <i class="fa-solid fa-play mr-1.5"></i> Start Scanner
+<button onclick="toggleCameraState()" class="py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-600 text-black font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg active:scale-95 transition">            
+    <i class="fa-solid fa-play mr-1.5"></i> Start Scanner
         </button>
     </div>
 </div>
@@ -881,6 +881,14 @@
             });
 
         }
+
+        async function toggleCameraState() {
+    if (html5QrCode && html5QrCode.isScanning) {
+        await stopBackCamera();
+    } else {
+        await startBackCamera();
+    }
+}
 
         async function startBackCamera() {
     if (html5QrCode && html5QrCode.isScanning) return;
