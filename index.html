@@ -56,7 +56,6 @@
             background-image: radial-gradient(#eab308 0.4px, transparent 0.4px);
             background-size: 16px 16px;
         }
-        /* Custom overrides for Html5QrcodeScanner UI */
         #reader {
             border: none !important;
             width: 100% !important;
@@ -71,7 +70,6 @@
         ::-webkit-scrollbar-track { background: #0c0e14; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
 
-        /* Scanner Viewfinder Reticle Box Overlay */
         .scanner-reticle {
             position: absolute;
             top: 50%;
@@ -118,7 +116,7 @@
 
     <!-- Modal: Vendor PIN Login -->
     <div id="vendorLoginModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-cardgala border border-amber-500/20 rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in duration-200">
+        <div class="bg-cardgala border border-amber-500/20 rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center space-y-5">
             <div class="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl mx-auto shadow-inner">
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
@@ -143,7 +141,6 @@
     <!-- Mobile Top Navigation Header -->
     <header class="border-b border-bordergala bg-cardgala/95 backdrop-blur sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
-            <!-- Brand & Event Info -->
             <div class="flex items-center space-x-2.5 min-w-0">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-yellow-600 via-amber-400 to-yellow-200 flex-shrink-0 flex items-center justify-center text-black font-bold text-lg shadow-md shadow-amber-500/20">
                     <span class="font-cinzel font-black">G</span>
@@ -157,7 +154,6 @@
                 </div>
             </div>
 
-            <!-- Header Vendor Badge & Admin Gear -->
             <div class="flex items-center space-x-2 flex-shrink-0">
                 <div class="flex items-center gap-1.5 bg-gray-900/90 border border-gray-800 px-2.5 py-1.5 rounded-lg text-xs">
                     <i class="fa-solid fa-circle-user text-amber-400 text-xs"></i>
@@ -166,17 +162,15 @@
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
-                <div id="adminSettingsButtonContainer">
-                    <!-- Dynamic Admin Settings Button -->
-                </div>
+                <div id="adminSettingsButtonContainer"></div>
             </div>
         </div>
     </header>
 
-    <!-- Main Mobile Shell Container -->
+    <!-- Main Shell Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 space-y-4">
 
-        <!-- Responsive Live Statistics Cards -->
+        <!-- Statistics Cards -->
         <div class="grid grid-cols-3 gap-2 sm:gap-4">
             <div class="bg-cardgala border border-bordergala rounded-xl p-3 flex flex-col justify-between shadow-md relative overflow-hidden">
                 <p class="text-[10px] sm:text-xs uppercase tracking-wider text-gray-400 font-semibold truncate">Issued</p>
@@ -203,7 +197,7 @@
             </div>
         </div>
 
-        <!-- Touch-Optimized Navigation Tabs -->
+        <!-- Navigation Tabs -->
         <nav class="flex border-b border-bordergala bg-cardgala/40 p-1 rounded-xl gap-1">
             <button onclick="switchTab('issue')" id="tabBtn-issue" class="flex-1 py-2.5 px-2 text-xs sm:text-sm font-semibold rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center gap-1.5 transition active:scale-95">
                 <i class="fa-solid fa-plus-circle text-xs"></i> <span>Issue</span>
@@ -218,7 +212,6 @@
 
         <!-- TAB 1: Issue Ticket Section -->
         <div id="tab-issue" class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-12 lg:gap-6">
-            <!-- Buyer Form -->
             <div class="lg:col-span-5 bg-cardgala border border-bordergala rounded-2xl p-4 sm:p-6 shadow-xl space-y-4">
                 <div class="border-b border-gray-800 pb-3 flex items-center justify-between">
                     <h2 class="text-base font-bold font-cinzel text-white flex items-center gap-2">
@@ -236,15 +229,15 @@
 
                     <div>
                         <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Phone Number *</label>
-                        <input type="tel" id="buyerPhone" required placeholder="e.g. +27 82 123 4567" 
+                        <input type="tel" id="buyerPhone" required placeholder="e.g. 073 123 4567" 
                             class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Ticket ID *</label>
-                            <input type="text" id="buyerTicketId" required
-                                class="w-full bg-gray-900 border border-gray-700 focus:border-amber-500 rounded-xl px-3.5 py-3 text-sm font-mono text-amber-400 font-bold focus:outline-none transition uppercase">
+                            <input type="text" id="buyerTicketId" readonly
+                                class="w-full bg-gray-800/80 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-amber-400 font-bold cursor-not-allowed focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Tier</label>
@@ -261,7 +254,7 @@
                 </form>
             </div>
 
-            <!-- Preview / Ticket Actions Side -->
+            <!-- Preview Card -->
             <div class="lg:col-span-7 flex flex-col items-center space-y-3">
                 <div class="w-full flex items-center justify-between px-1">
                     <span class="text-xs uppercase tracking-widest text-gray-400 font-semibold">Live Ticket Preview</span>
@@ -275,7 +268,6 @@
                     </div>
                 </div>
 
-                <!-- Scaled Mobile Ticket Card -->
                 <div class="w-full max-w-sm sm:max-w-md bg-gradient-to-br from-gray-900 via-cardgala to-black p-1 rounded-2xl shadow-2xl border border-amber-500/40">
                     <div id="printableTicket" class="relative bg-cardgala rounded-xl overflow-hidden border border-amber-500/30 p-5 flex flex-col justify-between ticket-pattern min-h-[420px]">
                         <div class="absolute top-2 left-2 right-2 bottom-2 border border-amber-500/20 pointer-events-none rounded-lg"></div>
@@ -310,7 +302,7 @@
                                 </div>
                                 <div>
                                     <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Phone</span>
-                                    <p class="text-xs text-gray-300 font-mono" id="previewBuyerPhone">+27 00 000 0000</p>
+                                    <p class="text-xs text-gray-300 font-mono" id="previewBuyerPhone">070 000 0000</p>
                                 </div>
                                 <div>
                                     <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Tier</span>
@@ -339,11 +331,9 @@
                     </span>
                 </div>
 
-                <!-- Scanner Outer Frame with Targeting Reticle Overlay -->
                 <div class="w-full max-w-sm bg-gray-950 rounded-2xl overflow-hidden border-2 border-amber-500/40 relative shadow-2xl aspect-square flex items-center justify-center">
                     <div id="reader" class="w-full h-full"></div>
                     
-                    <!-- Reticle Frame -->
                     <div id="reticleBox" class="scanner-reticle hidden">
                         <div class="reticle-corner reticle-tl"></div>
                         <div class="reticle-corner reticle-tr"></div>
@@ -352,10 +342,7 @@
                         <div class="scan-laser"></div>
                     </div>
 
-                    <!-- Instant Mobile Result Alert Banner Overlay -->
-                    <div id="instantScanAlert" class="absolute inset-x-2 top-2 z-20 hidden p-3.5 rounded-xl backdrop-blur-md shadow-2xl border transition-all duration-300 animate-in fade-in slide-in-from-top-4">
-                        <!-- Dynamic overlay content injected here -->
-                    </div>
+                    <div id="instantScanAlert" class="absolute inset-x-2 top-2 z-20 hidden p-3.5 rounded-xl backdrop-blur-md shadow-2xl border transition-all duration-300"></div>
                 </div>
 
                 <div class="w-full max-w-sm mt-3 flex items-center justify-between gap-2">
@@ -368,7 +355,6 @@
                     </label>
                 </div>
 
-                <!-- Manual Backup Entry -->
                 <div class="w-full max-w-sm mt-4 pt-4 border-t border-gray-800">
                     <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Manual Ticket ID Verification</label>
                     <form onsubmit="handleManualLookup(event)" class="flex gap-2">
@@ -381,7 +367,7 @@
                 </div>
             </div>
 
-            <!-- Verification Status Box Stacked Directly Below on Mobile -->
+            <!-- Verification Feed -->
             <div class="lg:col-span-5 bg-cardgala border border-bordergala rounded-2xl p-4 sm:p-6 shadow-xl flex flex-col justify-between">
                 <div>
                     <h2 class="text-base font-bold font-cinzel text-white mb-3 flex items-center gap-2">
@@ -478,9 +464,8 @@
             </div>
         </div>
 
-        <!-- TAB 3: Attendees List Section (Responsive Cards for Mobile) -->
+        <!-- TAB 3: Attendees List Section -->
         <div id="tab-attendees" class="hidden space-y-3">
-            <!-- Search & Filters -->
             <div class="bg-cardgala border border-bordergala rounded-2xl p-3 sm:p-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-4">
                 <div class="relative w-full sm:w-80">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-500 text-xs"></i>
@@ -488,19 +473,12 @@
                         class="w-full bg-gray-900 border border-gray-700 rounded-xl pl-9 pr-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-500 transition">
                 </div>
 
-                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end" id="attendeeHeaderActions">
-                    <!-- Dynamic Controls injected via JS based on Vendor Role -->
-                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end" id="attendeeHeaderActions"></div>
             </div>
 
-            <!-- Responsive Mobile Card List / Desktop Table Container -->
             <div class="bg-cardgala border border-bordergala rounded-2xl overflow-hidden shadow-xl">
-                <!-- Mobile Card Layout -->
-                <div id="attendeesMobileList" class="block sm:hidden divide-y divide-gray-800/80">
-                    <!-- Rendered dynamically -->
-                </div>
+                <div id="attendeesMobileList" class="block sm:hidden divide-y divide-gray-800/80"></div>
 
-                <!-- Desktop Table View -->
                 <div class="hidden sm:block overflow-x-auto">
                     <table class="w-full text-left text-sm text-gray-300">
                         <thead class="bg-gray-900/90 text-[11px] uppercase tracking-wider text-gray-400 border-b border-gray-800">
@@ -513,9 +491,7 @@
                                 <th class="py-3.5 px-4 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="attendeesTableBody" class="divide-y divide-gray-800/60">
-                            <!-- Rows rendered dynamically -->
-                        </tbody>
+                        <tbody id="attendeesTableBody" class="divide-y divide-gray-800/60"></tbody>
                     </table>
                 </div>
                 
@@ -527,7 +503,7 @@
 
     </main>
 
-    <!-- Modal: Event Settings (Admin Only) -->
+    <!-- Modal: Event Settings -->
     <div id="settingsModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-cardgala border border-amber-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
             <h2 class="text-lg font-bold font-cinzel text-white mb-4 flex items-center gap-2">
@@ -567,7 +543,6 @@
 
     <!-- Application Script Logic -->
     <script>
-        // Supabase Initialization
         const SUPABASE_URL = 'https://ylascpwfqbfylwdgqvcb.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlsYXNjcHdmcWJmeWx3ZGdxdmNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MjY3MjMsImV4cCI6MjA5MjIwMjcyM30.uHT-IymBrvMiCtyC1ZkBJFmGDuyb-7EkxmTTqt2RYfM';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -600,8 +575,12 @@
 
             renderAdminUI();
             loadTicketsFromCloud();
-            updateNextTicketIdInput();
             renderHeaderAndPreviewDefaults();
+
+            // Background Auto-Sync Heartbeat every 5s across devices
+            setInterval(() => {
+                loadTicketsFromCloud();
+            }, 5000);
         };
 
         function renderAdminUI() {
@@ -617,7 +596,6 @@
             }
         }
 
-        // Vendor Authentication via Supabase
         async function handleVendorLogin(e) {
             e.preventDefault();
             const pin = document.getElementById('vendorPinInput').value.trim();
@@ -653,7 +631,6 @@
             renderAdminUI();
         }
 
-        // Load Tickets from Supabase Cloud
         async function loadTicketsFromCloud() {
             const { data, error } = await supabaseClient
                 .from('tickets')
@@ -674,10 +651,10 @@
                 }));
                 updateStats();
                 renderAttendeesTable();
+                updateNextTicketIdInput();
             }
         }
 
-        // Settings Management
         function loadSettings() {
             const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
             if (saved) {
@@ -724,7 +701,18 @@
         }
 
         function updateNextTicketIdInput() {
-            const formattedNum = String(settings.counter).padStart(3, '0');
+            let maxNum = 0;
+            tickets.forEach(t => {
+                if (t.ticketId && t.ticketId.startsWith(settings.prefix)) {
+                    const numPart = parseInt(t.ticketId.replace(settings.prefix, ''), 10);
+                    if (!isNaN(numPart) && numPart > maxNum) {
+                        maxNum = numPart;
+                    }
+                }
+            });
+
+            const nextNum = maxNum + 1;
+            const formattedNum = String(nextNum).padStart(3, '0');
             document.getElementById('buyerTicketId').value = `${settings.prefix}${formattedNum}`;
         }
 
@@ -739,9 +727,11 @@
             document.getElementById('attendeeBadgeCount').innerText = total;
         }
 
-        // Generate & Sync Ticket to Supabase Cloud
         async function handleGenerateTicket(e) {
             e.preventDefault();
+
+            // Refresh latest database records before creating new ticket
+            await loadTicketsFromCloud();
 
             if (!currentVendor) {
                 alert("Please log in with your seller PIN first.");
@@ -755,11 +745,11 @@
             const tier = document.getElementById('buyerTier').value;
 
             if (tickets.some(t => t.ticketId === ticketId)) {
-                alert(`Ticket ID ${ticketId} already exists!`);
+                alert(`Ticket ID ${ticketId} was just issued by another vendor! Auto-updating sequence...`);
+                updateNextTicketIdInput();
                 return;
             }
 
-            // Insert into Supabase Table
             const { error } = await supabaseClient
                 .from('tickets')
                 .insert([{
@@ -788,17 +778,7 @@
                 checkedInBy: null
             };
 
-            tickets.unshift(newTicket);
-
-            const formattedNum = String(settings.counter).padStart(3, '0');
-            if (ticketId === `${settings.prefix}${formattedNum}`) {
-                settings.counter++;
-                localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
-            }
-
-            updateStats();
-            renderAttendeesTable();
-            updateNextTicketIdInput();
+            await loadTicketsFromCloud();
             renderTicketCard(newTicket);
 
             document.getElementById('buyerName').value = '';
@@ -895,7 +875,6 @@
             }
         }
 
-        // Direct Rear / Back Camera Auto Start
         async function startBackCamera() {
             if (html5QrCode && html5QrCode.isScanning) return;
 
@@ -906,7 +885,6 @@
             const config = { fps: 15, qrbox: { width: 220, height: 220 } };
 
             try {
-                // Force environment camera (rear camera) directly without camera choice UI
                 await html5QrCode.start(
                     { facingMode: { exact: "environment" } },
                     config,
@@ -915,7 +893,6 @@
                 );
                 document.getElementById('reticleBox').classList.remove('hidden');
             } catch (err) {
-                // Fallback to standard environment facingMode if exact constraint fails
                 try {
                     await html5QrCode.start(
                         { facingMode: "environment" },
@@ -1000,7 +977,6 @@
                     const checkInTimestamp = new Date().toISOString();
                     const scannerVendor = currentVendor || 'Admin';
                     
-                    // Update Cloud Database Status & Checked-in-by tag
                     await supabaseClient
                         .from('tickets')
                         .update({ 
@@ -1032,10 +1008,9 @@
             }
         }
 
-        // Instant Banner Overlay directly on camera frame so user doesn't need to scroll down
         function showInstantAlert(type, title, subtitle) {
             const alertEl = document.getElementById('instantScanAlert');
-            alertEl.classList.remove('hidden', 'bg-emerald-950/90', 'border-emerald-500', 'text-emerald-300', 'bg-red-950/90', 'border-red-500', 'text-red-300');
+            alertEl.classList.remove('hidden', 'bg-emerald-950/95', 'border-emerald-500', 'text-emerald-300', 'bg-red-950/95', 'border-red-500', 'text-red-300');
 
             if (type === 'success') {
                 alertEl.classList.add('bg-emerald-950/95', 'border-emerald-500', 'text-emerald-300');
@@ -1076,83 +1051,6 @@
             }
         }
 
-        function onScanSuccess(decodedText) { 
-            processScannedPayload(decodedText); 
-        }
-
-        function scanQRImage(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.scanFile(file, true)
-                .then(decodedText => processScannedPayload(decodedText))
-                .catch(err => alert("No valid QR Code found in image."));
-        }
-
-        function handleManualLookup(e) {
-            e.preventDefault();
-            const ticketId = document.getElementById('manualTicketInput').value.trim().toUpperCase();
-            if (ticketId) {
-                processScannedPayload(ticketId);
-                document.getElementById('manualTicketInput').value = '';
-            }
-        }
-
-        async function processScannedPayload(rawText) {
-            let scannedId = rawText;
-            try {
-                const parsed = JSON.parse(rawText);
-                if (parsed && parsed.id) scannedId = parsed.id;
-            } catch(e) {}
-
-            scannedId = String(scannedId).trim().toUpperCase();
-            const ticketIndex = tickets.findIndex(t => t.ticketId === scannedId);
-
-            hideScanResultCards();
-
-            if (ticketIndex === -1) {
-                document.getElementById('scanResultError').classList.remove('hidden');
-            } else {
-                const ticket = tickets[ticketIndex];
-                if (ticket.status === 'CHECKED_IN') {
-                    document.getElementById('warnName').innerText = ticket.name;
-                    document.getElementById('warnTicketId').innerText = ticket.ticketId;
-                    document.getElementById('warnCheckedBy').innerText = ticket.checkedInBy || 'Unknown';
-                    document.getElementById('warnTime').innerText = ticket.checkInTime ? new Date(ticket.checkInTime).toLocaleTimeString() : 'Earlier';
-                    document.getElementById('scanResultWarning').classList.remove('hidden');
-                } else {
-                    const checkInTimestamp = new Date().toISOString();
-                    const scannerVendor = currentVendor || 'Admin';
-                    
-                    // Update Cloud Database Status & Checked-in-by tag
-                    await supabaseClient
-                        .from('tickets')
-                        .update({ 
-                            status: 'CHECKED_IN', 
-                            check_in_time: checkInTimestamp,
-                            checked_in_by: scannerVendor 
-                        })
-                        .eq('ticket_id', ticket.ticketId);
-
-                    ticket.status = 'CHECKED_IN';
-                    ticket.checkInTime = checkInTimestamp;
-                    ticket.checkedInBy = scannerVendor;
-                    tickets[ticketIndex] = ticket;
-                    
-                    updateStats();
-                    renderAttendeesTable();
-
-                    document.getElementById('resName').innerText = ticket.name;
-                    document.getElementById('resTicketId').innerText = ticket.ticketId;
-                    document.getElementById('resPhone').innerText = ticket.phone;
-                    document.getElementById('resTier').innerText = ticket.tier;
-                    document.getElementById('resCheckedBy').innerText = scannerVendor;
-                    document.getElementById('resTime').innerText = new Date(ticket.checkInTime).toLocaleTimeString();
-                    document.getElementById('scanResultSuccess').classList.remove('hidden');
-                }
-            }
-        }
-
         function resetScanStatus() {
             hideScanResultCards();
             document.getElementById('scanResultIdle').classList.remove('hidden');
@@ -1165,7 +1063,6 @@
             document.getElementById('scanResultError').classList.add('hidden');
         }
 
-        // Attendees Table & Mobile Card Breakdown
         function renderAttendeesTable() {
             const tbody = document.getElementById('attendeesTableBody');
             const mobileList = document.getElementById('attendeesMobileList');
@@ -1229,7 +1126,6 @@
                     ? `<button onclick="deleteTicket('${ticket.ticketId}')" title="Delete Ticket" class="p-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-red-400 rounded-lg border border-gray-700 transition"><i class="fa-solid fa-trash-can"></i></button>`
                     : '';
 
-                // Desktop Row
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-800/40 transition";
                 tr.innerHTML = `
@@ -1247,7 +1143,6 @@
                 `;
                 tbody.appendChild(tr);
 
-                // Mobile Card Item
                 const card = document.createElement('div');
                 card.className = "p-3.5 space-y-2";
                 card.innerHTML = `
@@ -1281,9 +1176,7 @@
             }
             if (confirm(`Delete ticket ${ticketId}?`)) {
                 await supabaseClient.from('tickets').delete().eq('ticket_id', ticketId);
-                tickets = tickets.filter(t => t.ticketId !== ticketId);
-                updateStats();
-                renderAttendeesTable();
+                await loadTicketsFromCloud();
             }
         }
 
@@ -1322,9 +1215,7 @@
             if (currentVendor !== 'Admin') return;
             if (confirm("WARNING: Delete ALL tickets from database?")) {
                 await supabaseClient.from('tickets').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-                tickets = [];
-                updateStats();
-                renderAttendeesTable();
+                await loadTicketsFromCloud();
             }
         }
     </script>
