@@ -928,6 +928,11 @@
                     ? `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Checked-In</span>`
                     : `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">Unused</span>`;
 
+                // Only render the delete button if the currently logged-in user is 'Admin'
+                const deleteButtonHtml = currentVendor === 'Admin' 
+                    ? `<button onclick="deleteTicket('${ticket.ticketId}')" title="Delete Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-red-400 rounded border border-gray-700 transition"><i class="fa-solid fa-trash-can"></i></button>`
+                    : '';
+
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-mono font-bold text-amber-400">${ticket.ticketId}</td>
                     <td class="py-3 px-4 font-medium text-white">${ticket.name}</td>
@@ -939,9 +944,7 @@
                         <button onclick="viewTicketModal('${ticket.ticketId}')" title="Preview Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-amber-400 rounded border border-gray-700 transition">
                             <i class="fa-solid fa-eye"></i>
                         </button>
-                        <button onclick="deleteTicket('${ticket.ticketId}')" title="Delete Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-red-400 rounded border border-gray-700 transition">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
+                        ${deleteButtonHtml}
                     </td>
                 `;
                 tbody.appendChild(tr);
