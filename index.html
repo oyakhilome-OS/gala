@@ -357,6 +357,10 @@
                                 <span class="text-gray-400">Tier:</span>
                                 <span class="text-amber-300 font-semibold" id="resTier">-</span>
                             </div>
+                            <div class="flex justify-between border-b border-gray-800/80 pb-1">
+                                <span class="text-gray-400">Checked In By:</span>
+                                <span class="text-emerald-400 font-bold" id="resCheckedBy">-</span>
+                            </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-400">Scan Timestamp:</span>
                                 <span class="text-xs text-gray-300 font-mono" id="resTime">-</span>
@@ -382,6 +386,10 @@
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
                                 <span class="text-gray-400">Ticket Number:</span>
                                 <span class="font-mono text-amber-400 font-bold" id="warnTicketId">-</span>
+                            </div>
+                            <div class="flex justify-between border-b border-gray-800/80 pb-1">
+                                <span class="text-gray-400">Scanned By:</span>
+                                <span class="text-amber-300 font-semibold" id="warnCheckedBy">-</span>
                             </div>
                             <div class="flex justify-between border-b border-gray-800/80 pb-1">
                                 <span class="text-gray-400">First Scanned At:</span>
@@ -428,10 +436,9 @@
                             <tr>
                                 <th class="py-3.5 px-4 font-semibold">Ticket ID</th>
                                 <th class="py-3.5 px-4 font-semibold">Attendee Name</th>
-                                <th class="py-3.5 px-4 font-semibold">Phone</th>
-                                <th class="py-3.5 px-4 font-semibold">Tier</th>
                                 <th class="py-3.5 px-4 font-semibold">Sold By</th>
                                 <th class="py-3.5 px-4 font-semibold">Status</th>
+                                <th class="py-3.5 px-4 font-semibold">Checked In By</th>
                                 <th class="py-3.5 px-4 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
@@ -589,7 +596,8 @@
                     soldBy: t.sold_by,
                     status: t.status,
                     createdAt: t.created_at,
-                    checkInTime: t.check_in_time
+                    checkInTime: t.check_in_time,
+                    checkedInBy: t.checked_in_by
                 }));
                 updateStats();
                 renderAttendeesTable();
@@ -704,7 +712,8 @@
                 soldBy: currentVendor,
                 status: 'UNUSED',
                 createdAt: new Date().toISOString(),
-                checkInTime: null
+                checkInTime: null,
+                checkedInBy: null
             };
 
             tickets.unshift(newTicket);
@@ -785,7 +794,6 @@
                             console.log('Share aborted', err);
                         }
                     } else {
-                        // Fallback: download if file sharing is not supported on device/browser
                         downloadTicketPNG();
                         alert("Direct file sharing is not supported on this browser, so your ticket image has been downloaded instead!");
                     }
@@ -872,18 +880,26 @@
                 if (ticket.status === 'CHECKED_IN') {
                     document.getElementById('warnName').innerText = ticket.name;
                     document.getElementById('warnTicketId').innerText = ticket.ticketId;
+                    document.getElementById('warnCheckedBy').innerText = ticket.checkedInBy || 'Unknown';
                     document.getElementById('warnTime').innerText = ticket.checkInTime ? new Date(ticket.checkInTime).toLocaleString() : 'Earlier';
                     document.getElementById('scanResultWarning').classList.remove('hidden');
                 } else {
                     const checkInTimestamp = new Date().toISOString();
+                    const scannerVendor = currentVendor || 'Admin';
                     
+                    // Update Cloud Database Status & Checked-in-by tag
                     await supabaseClient
                         .from('tickets')
-                        .update({ status: 'CHECKED_IN', check_in_time: checkInTimestamp })
+                        .update({ 
+                            status: 'CHECKED_IN', 
+                            check_in_time: checkInTimestamp,
+                            checked_in_by: scannerVendor 
+                        })
                         .eq('ticket_id', ticket.ticketId);
 
                     ticket.status = 'CHECKED_IN';
                     ticket.checkInTime = checkInTimestamp;
+                    ticket.checkedInBy = scannerVendor;
                     tickets[ticketIndex] = ticket;
                     
                     updateStats();
@@ -893,6 +909,7 @@
                     document.getElementById('resTicketId').innerText = ticket.ticketId;
                     document.getElementById('resPhone').innerText = ticket.phone;
                     document.getElementById('resTier').innerText = ticket.tier;
+                    document.getElementById('resCheckedBy').innerText = scannerVendor;
                     document.getElementById('resTime').innerText = new Date(ticket.checkInTime).toLocaleTimeString();
                     document.getElementById('scanResultSuccess').classList.remove('hidden');
                 }
@@ -946,7 +963,8 @@
                 const matchesSearch = t.name.toLowerCase().includes(search) ||
                                       t.phone.toLowerCase().includes(search) ||
                                       t.ticketId.toLowerCase().includes(search) ||
-                                      t.soldBy.toLowerCase().includes(search);
+                                      t.soldBy.toLowerCase().includes(search) ||
+                                      (t.checkedInBy && t.checkedInBy.toLowerCase().includes(search));
                 const matchesFilter = filter === 'ALL' || t.status === filter;
                 return matchesSearch && matchesFilter;
             });
@@ -967,6 +985,10 @@
                     ? `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Checked-In</span>`
                     : `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">Unused</span>`;
 
+                const checkedInByTag = ticket.checkedInBy 
+                    ? `<span class="text-xs text-emerald-300 font-medium">${ticket.checkedInBy}</span>` 
+                    : `<span class="text-xs text-gray-500">-</span>`;
+
                 const deleteButtonHtml = currentVendor === 'Admin' 
                     ? `<button onclick="deleteTicket('${ticket.ticketId}')" title="Delete Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-red-400 rounded border border-gray-700 transition"><i class="fa-solid fa-trash-can"></i></button>`
                     : '';
@@ -974,10 +996,9 @@
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-mono font-bold text-amber-400">${ticket.ticketId}</td>
                     <td class="py-3 px-4 font-medium text-white">${ticket.name}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-gray-400">${ticket.phone}</td>
-                    <td class="py-3 px-4 text-xs text-gray-300">${ticket.tier}</td>
                     <td class="py-3 px-4 text-xs font-semibold text-amber-300">${ticket.soldBy}</td>
                     <td class="py-3 px-4">${statusBadge}</td>
+                    <td class="py-3 px-4">${checkedInByTag}</td>
                     <td class="py-3 px-4 text-right space-x-2">
                         <button onclick="viewTicketModal('${ticket.ticketId}')" title="Preview Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-amber-400 rounded border border-gray-700 transition">
                             <i class="fa-solid fa-eye"></i>
@@ -1017,10 +1038,11 @@
                 return;
             }
 
-            let csvContent = "data:text/csv;charset=utf-8,Ticket ID,Name,Phone,Tier,Sold By,Status,CheckIn Time\n";
+            let csvContent = "data:text/csv;charset=utf-8,Ticket ID,Name,Phone,Tier,Sold By,Status,Checked In By,CheckIn Time\n";
             tickets.forEach(t => {
+                const checkedBy = t.checkedInBy || '';
                 const time = t.checkInTime ? `"${new Date(t.checkInTime).toLocaleString()}"` : '""';
-                csvContent += `"${t.ticketId}","${t.name}","${t.phone}","${t.tier}","${t.soldBy}","${t.status}",${time}\n`;
+                csvContent += `"${t.ticketId}","${t.name}","${t.phone}","${t.tier}","${t.soldBy}","${t.status}","${checkedBy}",${time}\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
