@@ -422,20 +422,8 @@
                         class="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
                 </div>
 
-                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                    <select id="statusFilter" onchange="renderAttendeesTable()" class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
-                        <option value="ALL">All Statuses</option>
-                        <option value="UNUSED">Unused Only</option>
-                        <option value="CHECKED_IN">Checked-In Only</option>
-                    </select>
-
-                    <button onclick="exportToCSV()" class="px-3.5 py-2 text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap">
-                        <i class="fa-solid fa-file-csv"></i> Export CSV
-                    </button>
-
-                    <button onclick="confirmClearAll()" class="px-3.5 py-2 text-xs font-semibold bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/50 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap">
-                        <i class="fa-solid fa-trash"></i> Clear All
-                    </button>
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end" id="attendeeHeaderActions">
+                    <!-- Dynamic Controls injected via JS based on Vendor Role -->
                 </div>
             </div>
 
@@ -566,6 +554,7 @@
             document.getElementById('vendorLoginModal').classList.add('hidden');
             document.getElementById('vendorPinInput').value = '';
             errEl.classList.add('hidden');
+            renderAttendeesTable();
         }
 
         function logoutVendor() {
@@ -899,7 +888,30 @@
             const tbody = document.getElementById('attendeesTableBody');
             const emptyMsg = document.getElementById('emptyTableMessage');
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
-            const filter = document.getElementById('statusFilter').value;
+            const filter = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : 'ALL';
+            const actionsContainer = document.getElementById('attendeeHeaderActions');
+
+            // Conditionally render Admin-only controls in the attendee header
+            let adminButtonsHtml = '';
+            if (currentVendor === 'Admin') {
+                adminButtonsHtml = `
+                    <button onclick="exportToCSV()" class="px-3.5 py-2 text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-file-csv"></i> Export CSV
+                    </button>
+                    <button onclick="confirmClearAll()" class="px-3.5 py-2 text-xs font-semibold bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/50 rounded-lg transition flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-trash"></i> Clear All
+                    </button>
+                `;
+            }
+
+            actionsContainer.innerHTML = `
+                <select id="statusFilter" onchange="renderAttendeesTable()" class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition">
+                    <option value="ALL" ${filter === 'ALL' ? 'selected' : ''}>All Statuses</option>
+                    <option value="UNUSED" ${filter === 'UNUSED' ? 'selected' : ''}>Unused Only</option>
+                    <option value="CHECKED_IN" ${filter === 'CHECKED_IN' ? 'selected' : ''}>Checked-In Only</option>
+                </select>
+                ${adminButtonsHtml}
+            `;
 
             tbody.innerHTML = '';
 
@@ -952,6 +964,10 @@
         }
 
         async function deleteTicket(ticketId) {
+            if (currentVendor !== 'Admin') {
+                alert("Unauthorized action.");
+                return;
+            }
             if (confirm(`Are you sure you want to delete ticket ${ticketId}?`)) {
                 await supabaseClient.from('tickets').delete().eq('ticket_id', ticketId);
                 tickets = tickets.filter(t => t.ticketId !== ticketId);
@@ -969,6 +985,7 @@
         }
 
         function exportToCSV() {
+            if (currentVendor !== 'Admin') return;
             if (tickets.length === 0) {
                 alert("No tickets available to export.");
                 return;
@@ -990,6 +1007,7 @@
         }
 
         async function confirmClearAll() {
+            if (currentVendor !== 'Admin') return;
             if (confirm("WARNING: This will delete ALL ticket records from the cloud database! Are you sure?")) {
                 await supabaseClient.from('tickets').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // deletes all rows
                 tickets = [];
