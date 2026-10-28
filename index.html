@@ -44,16 +44,10 @@
     </script>
     <style>
         .gold-gradient-text {
-            background: linear-gradient(135deg, #FFF5C0 0%, #E2B755 50%, #A67C1E 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #E2B755;
         }
         .ticket-pattern {
             background-color: #11141c;
-            background-image: radial-gradient(#eab308 0.5px, transparent 0.5px), radial-gradient(#eab308 0.5px, #11141c 0.5px);
-            background-size: 20px 20px;
-            background-position: 0 0,10px 10px;
-            background-opacity: 0.05;
         }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #11141c; }
@@ -111,9 +105,9 @@
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
-                <button onclick="openSettingsModal()" class="px-3 py-1.5 text-xs sm:text-sm font-medium bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-amber-500"></i> Settings
-                </button>
+                <div id="adminSettingsButtonContainer">
+                    <!-- Injected dynamically if Admin -->
+                </div>
             </div>
         </div>
     </header>
@@ -220,19 +214,19 @@
                             <i class="fa-solid fa-download text-amber-400"></i> Download PNG
                         </button>
                         <button onclick="shareTicket()" id="shareBtn" disabled class="px-3 py-1.5 text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg border border-gray-700 transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-share-nodes text-amber-400"></i> Share
+                            <i class="fa-solid fa-share-nodes text-amber-400"></i> Share Image
                         </button>
                     </div>
                 </div>
 
                 <!-- Decorative Gala Ticket Box -->
-                <div class="w-full max-w-md bg-gradient-to-br from-gray-900 via-cardgala to-black p-1 rounded-2xl shadow-2xl border border-amber-500/40" id="ticketWrapper">
+                <div class="w-full max-w-md bg-gradient-to-br from-gray-900 via-cardgala to-black p-1 rounded-2xl shadow-2xl border border-amber-500/40">
                     <div id="printableTicket" class="relative bg-cardgala rounded-xl overflow-hidden border border-amber-500/30 p-6 flex flex-col justify-between ticket-pattern min-h-[460px]">
                         <div class="absolute top-2 left-2 right-2 bottom-2 border border-amber-500/20 pointer-events-none rounded-lg"></div>
 
                         <div class="text-center space-y-1 z-10 pt-2">
                             <p class="text-[10px] tracking-[0.3em] font-semibold text-amber-400 uppercase">OFFICIAL ADMISSION TICKET</p>
-                            <h2 class="text-2xl font-bold font-cinzel gold-gradient-text tracking-wider" id="previewEventTitle">GALA NIGHT 2026</h2>
+                            <h2 class="text-2xl font-bold font-cinzel text-amber-400 tracking-wider" id="previewEventTitle">GALA NIGHT 2026</h2>
                             <p class="text-xs text-gray-300" id="previewEventVenue">Winners Chapel, Cape Town</p>
                             <p class="text-[11px] text-gray-400" id="previewEventDate">Saturday, Nov 28, 2026</p>
                         </div>
@@ -264,7 +258,7 @@
                                 </div>
                                 <div>
                                     <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold block">Ticket Tier</span>
-                                    <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40" id="previewBuyerTier">Single</span>
+                                    <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40" id="previewBuyerTier">Single</span>
                                 </div>
                             </div>
                         </div>
@@ -524,10 +518,24 @@
                 document.getElementById('currentVendorDisplay').innerText = currentVendor;
             }
 
+            renderAdminUI();
             loadTicketsFromCloud();
             updateNextTicketIdInput();
             renderHeaderAndPreviewDefaults();
         };
+
+        function renderAdminUI() {
+            const settingsContainer = document.getElementById('adminSettingsButtonContainer');
+            if (currentVendor === 'Admin') {
+                settingsContainer.innerHTML = `
+                    <button onclick="openSettingsModal()" class="px-3 py-1.5 text-xs sm:text-sm font-medium bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg border border-gray-700 transition flex items-center gap-2">
+                        <i class="fa-solid fa-gear text-amber-500"></i> Settings
+                    </button>
+                `;
+            } else {
+                settingsContainer.innerHTML = '';
+            }
+        }
 
         // Vendor Authentication via Supabase
         async function handleVendorLogin(e) {
@@ -554,6 +562,7 @@
             document.getElementById('vendorLoginModal').classList.add('hidden');
             document.getElementById('vendorPinInput').value = '';
             errEl.classList.add('hidden');
+            renderAdminUI();
             renderAttendeesTable();
         }
 
@@ -561,6 +570,7 @@
             localStorage.removeItem('gala_active_vendor');
             currentVendor = null;
             document.getElementById('vendorLoginModal').classList.remove('hidden');
+            renderAdminUI();
         }
 
         // Load Tickets from Supabase Cloud
@@ -596,6 +606,7 @@
 
         function saveSettings(e) {
             e.preventDefault();
+            if (currentVendor !== 'Admin') return;
             settings.title = document.getElementById('settingTitle').value;
             settings.date = document.getElementById('settingDate').value;
             settings.venue = document.getElementById('settingVenue').value;
@@ -609,6 +620,7 @@
         }
 
         function openSettingsModal() {
+            if (currentVendor !== 'Admin') return;
             document.getElementById('settingTitle').value = settings.title;
             document.getElementById('settingDate').value = settings.date;
             document.getElementById('settingVenue').value = settings.venue;
@@ -742,7 +754,7 @@
 
         function downloadTicketPNG() {
             const element = document.getElementById('printableTicket');
-            html2canvas(element, { scale: 2 }).then(canvas => {
+            html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#151922' }).then(canvas => {
                 const link = document.createElement('a');
                 const name = document.getElementById('previewBuyerName').innerText.replace(/\s+/g, '_');
                 const ticketId = document.getElementById('previewTicketIdLabel').innerText;
@@ -752,17 +764,34 @@
             });
         }
 
-        function shareTicket() {
+        async function shareTicket() {
+            const element = document.getElementById('printableTicket');
             const name = document.getElementById('previewBuyerName').innerText;
             const ticketId = document.getElementById('previewTicketIdLabel').innerText;
-            const tier = document.getElementById('previewBuyerTier').innerText;
-            const shareText = `🎟️ *${settings.title}*\n*Ticket ID:* ${ticketId}\n*Guest:* ${name}\n*Tier:* ${tier}\n*Date:* ${settings.date}\n*Venue:* ${settings.venue}\n\nPlease present your ticket QR code at the entrance.`;
 
-            if (navigator.share) {
-                navigator.share({ title: `${settings.title} Ticket`, text: shareText }).catch(err => {});
-            } else {
-                navigator.clipboard.writeText(shareText);
-                alert("Ticket details copied to clipboard!");
+            try {
+                const canvas = await html2canvas(element, { scale: 3, useCORS: true, backgroundColor: '#151922' });
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], `Ticket_${ticketId}_${name.replace(/\s+/g, '_')}.png`, { type: 'image/png' });
+                    
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: `${settings.title} Ticket`,
+                                text: `Here is your admission ticket for ${settings.title}!`
+                            });
+                        } catch (err) {
+                            console.log('Share aborted', err);
+                        }
+                    } else {
+                        // Fallback: download if file sharing is not supported on device/browser
+                        downloadTicketPNG();
+                        alert("Direct file sharing is not supported on this browser, so your ticket image has been downloaded instead!");
+                    }
+                }, 'image/png');
+            } catch (err) {
+                alert("Could not generate shareable image.");
             }
         }
 
@@ -848,7 +877,6 @@
                 } else {
                     const checkInTimestamp = new Date().toISOString();
                     
-                    // Update Cloud Database Status
                     await supabaseClient
                         .from('tickets')
                         .update({ status: 'CHECKED_IN', check_in_time: checkInTimestamp })
@@ -891,7 +919,6 @@
             const filter = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : 'ALL';
             const actionsContainer = document.getElementById('attendeeHeaderActions');
 
-            // Conditionally render Admin-only controls in the attendee header
             let adminButtonsHtml = '';
             if (currentVendor === 'Admin') {
                 adminButtonsHtml = `
@@ -940,7 +967,6 @@
                     ? `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Checked-In</span>`
                     : `<span class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">Unused</span>`;
 
-                // Only render the delete button if the currently logged-in user is 'Admin'
                 const deleteButtonHtml = currentVendor === 'Admin' 
                     ? `<button onclick="deleteTicket('${ticket.ticketId}')" title="Delete Ticket" class="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 text-red-400 rounded border border-gray-700 transition"><i class="fa-solid fa-trash-can"></i></button>`
                     : '';
@@ -1009,7 +1035,7 @@
         async function confirmClearAll() {
             if (currentVendor !== 'Admin') return;
             if (confirm("WARNING: This will delete ALL ticket records from the cloud database! Are you sure?")) {
-                await supabaseClient.from('tickets').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // deletes all rows
+                await supabaseClient.from('tickets').delete().neq('id', '00000000-0000-0000-0000-000000000000');
                 tickets = [];
                 updateStats();
                 renderAttendeesTable();
