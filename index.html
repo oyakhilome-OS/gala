@@ -236,15 +236,15 @@
 
                     <div>
                         <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Phone Number *</label>
-                        <input type="tel" id="buyerPhone" required placeholder="e.g. 073 123 4567" 
+                        <input type="tel" id="buyerPhone" required placeholder="e.g. +27 82 123 4567" 
                             class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition">
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Ticket ID *</label>
-                            <input type="text" id="buyerTicketId" readonly
-    class="w-full bg-gray-800/80 border border-gray-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-amber-400 font-bold cursor-not-allowed focus:outline-none">
+                            <input type="text" id="buyerTicketId" required
+                                class="w-full bg-gray-900 border border-gray-700 focus:border-amber-500 rounded-xl px-3.5 py-3 text-sm font-mono text-amber-400 font-bold focus:outline-none transition uppercase">
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Tier</label>
@@ -310,7 +310,7 @@
                                 </div>
                                 <div>
                                     <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Phone</span>
-                                    <p class="text-xs text-gray-300 font-mono" id="previewBuyerPhone">070 000 0000</p>
+                                    <p class="text-xs text-gray-300 font-mono" id="previewBuyerPhone">+27 00 000 0000</p>
                                 </div>
                                 <div>
                                     <span class="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">Tier</span>
@@ -602,11 +602,6 @@
             loadTicketsFromCloud();
             updateNextTicketIdInput();
             renderHeaderAndPreviewDefaults();
-
-            // Add this at the bottom of window.onload
-setInterval(() => {
-    loadTicketsFromCloud();
-}, 5000); // Checks for new sales every 5 seconds across all vendor phones
         };
 
         function renderAdminUI() {
@@ -747,27 +742,6 @@ setInterval(() => {
         // Generate & Sync Ticket to Supabase Cloud
         async function handleGenerateTicket(e) {
             e.preventDefault();
-
-            // 1. Force instant cloud fetch FIRST so we always have the newest database sequence
-    await loadTicketsFromCloud();
-
-    if (!currentVendor) {
-        alert("Please log in with your seller PIN first.");
-        document.getElementById('vendorLoginModal').classList.remove('hidden');
-        return;
-    }
-
-    // Re-grab the latest dynamically computed ID
-    const name = document.getElementById('buyerName').value.trim();
-    const phone = document.getElementById('buyerPhone').value.trim();
-    const ticketId = document.getElementById('buyerTicketId').value.trim().toUpperCase();
-    const tier = document.getElementById('buyerTier').value;
-
-    if (tickets.some(t => t.ticketId === ticketId)) {
-        alert(`Ticket ID ${ticketId} was just issued by another vendor! Your ID has been auto-updated to the next available number. Please try again.`);
-        updateNextTicketIdInput();
-        return;
-    }
 
             if (!currentVendor) {
                 alert("Please log in with your seller PIN first.");
